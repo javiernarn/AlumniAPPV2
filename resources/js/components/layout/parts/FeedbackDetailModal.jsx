@@ -1,6 +1,8 @@
 import React from "react";
 import { CommentOutlined } from "@ant-design/icons";
-import { Button, Empty, Modal, Space, Spin, Tag, Typography } from "antd";
+import { Empty, Space, Spin, Tag, Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { useLayoutContext } from "~/components/layout/LayoutContext";
 import {
     FEEDBACK_AREA_LABELS,

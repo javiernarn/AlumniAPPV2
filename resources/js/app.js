@@ -3,11 +3,19 @@
  * CSS that used to be compiled separately by mix.sass() is now imported
  * here so Vite bundles and injects it.
  */
+import "./utils/devtoolsGuard"; // hide the UI while DevTools is open (runs before React mounts)
 import "../css/tokens.css"; // design tokens (color palette) — load first
 import "../css/page-header.css";
+import "../css/card-system.css"; // ONE outlined, content-sized card look for every public page
+import "../css/auth-mobile-app.css"; // portrait-phone app look for Login / Forgot / Reset / Register
+import "../css/auth-appbar.css"; // ONE shared top bar (explicit height) for every signed-out phone screen
+import "../css/mobile-app-responsive.css"; // signed-in screens: all iPhones + Android sizes
 import "../css/page-theme-toggle.css"; // shared floating theme toggle // compact page headers (all pages inside the login)
 import "../sass/app.scss";
 import "../sass/safe-area-global.css";
+import "../css/input-clean.css"; // one clean border per field (no inner ring inside Password / Bio / Select / Date)
 
 import "./bootstrap";
 import "./Main";
+import "../css/app-modal.css"; // ONE look for every modal / drawer / pop-confirm (bottom sheet on phones)
+import "../css/close-buttons.css"; // one reliable, big-enough tap target for every X / close button

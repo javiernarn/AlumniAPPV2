@@ -1,6 +1,7 @@
 import React from "react";
 import { BankOutlined, CloseOutlined } from "@ant-design/icons";
-import { Button, Drawer, Row, Space } from "antd";
+import { Drawer, Grid, Row, Space } from "antd";
+import Button from "~/components/shared/AsyncButton";
 import { useAlumniDetailsContext } from "~/components/alumni/details/AlumniDetailsContext";
 import { companyInfo } from "~/components/alumni/details/detailsConstants";
 import ConfidentialNotice from "~/components/alumni/details/parts/ConfidentialNotice";
@@ -12,40 +13,62 @@ import FullDetailsSection from "~/components/alumni/details/parts/FullDetailsSec
 export default function AlumniDetailsDrawer() {
     const { visible, onCancel, loading, viewOnly, onSubmit } =
         useAlumniDetailsContext();
+    // Phones: short one-line title + Close/Submit moved to a bottom bar,
+    // so nothing can overlap in the header on any screen width.
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
+
+    const actionButtons = (
+        <>
+            <Button
+                icon={<CloseOutlined />}
+                onClick={onCancel}
+                disabled={loading}
+                size={isMobile ? "large" : "middle"}
+                block={isMobile}
+            >
+                Close
+            </Button>
+            {!viewOnly && (
+                <Button
+                    type="primary"
+                    onClick={onSubmit}
+                    loading={loading}
+                    size={isMobile ? "large" : "middle"}
+                    block={isMobile}
+                >
+                    Submit Application
+                </Button>
+            )}
+        </>
+    );
 
     return (
         <Drawer
             title={
-                <Space>
+                <span className="preview-drawer-title">
                     <BankOutlined />
-                    Alumni Registration Preview - {companyInfo.name}
-                </Space>
+                    <span className="preview-drawer-title-text">
+                        {isMobile
+                            ? "Registration Preview"
+                            : `Alumni Registration Preview - ${companyInfo.name}`}
+                    </span>
+                </span>
             }
             open={visible}
             onClose={onCancel}
             width="100%"
             height="100%"
             className="preview-drawer"
+            rootClassName="preview-drawer-root"
             placement="right"
-            extra={
-                <Space>
-                    <Button
-                        icon={<CloseOutlined />}
-                        onClick={onCancel}
-                        disabled={loading}
-                    >
-                        Close
-                    </Button>
-                    {!viewOnly && (
-                        <Button
-                            type="primary"
-                            onClick={onSubmit}
-                            loading={loading}
-                        >
-                            Submit Application
-                        </Button>
-                    )}
-                </Space>
+            extra={!isMobile ? <Space>{actionButtons}</Space> : null}
+            footer={
+                isMobile ? (
+                    <div className="preview-drawer-footer">
+                        {actionButtons}
+                    </div>
+                ) : null
             }
             styles={{
                 body: { padding: 0 },

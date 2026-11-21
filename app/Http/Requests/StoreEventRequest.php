@@ -9,7 +9,10 @@ class StoreEventRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        // Admin-only. Route middleware already enforces this; kept here as
+        // defense in depth so the request class is safe if reused elsewhere.
+        $user = $this->user();
+        return $user && $user->role === 'admin';
     }
 
     public function rules()
@@ -32,7 +35,7 @@ class StoreEventRequest extends FormRequest
             'agenda' => 'nullable|string',
             //'featured' => 'boolean|nullable',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120'
         ];
 
         return $rules;

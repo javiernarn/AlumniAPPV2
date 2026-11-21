@@ -4,9 +4,11 @@ import React from "react";
 import { Layout } from "antd";
 import { LayoutProvider } from "./LayoutContext";
 import useLayoutController from "./hooks/useLayoutController";
+import useShellScrollLock from "./hooks/useShellScrollLock";
 import SidebarNav from "./parts/SidebarNav";
 import LayoutHeader from "./parts/LayoutHeader";
 import LayoutFooter from "./parts/LayoutFooter";
+import MobileBottomNav from "./parts/MobileBottomNav";
 import SettingsModal from "./parts/SettingsModal";
 import AllNotificationsModal from "./parts/AllNotificationsModal";
 import EventRegistrationsModal from "./parts/EventRegistrationsModal";
@@ -32,16 +34,18 @@ const { Content } = Layout;
  */
 const MainLayout = ({ children }) => {
     const ctx = useLayoutController();
+    useShellScrollLock(); // only #content scrolls; header/footer can never ride up
 
     return (
         <LayoutProvider value={ctx}>
-            <Layout style={{ minHeight: "100vh" }}>
+            <Layout className="app-shell-root">
                 <SidebarNav />
 
                 <Layout className="site-layout">
                     <LayoutHeader />
                     <Content id="content">{children}</Content>
-                    <LayoutFooter />
+                    {/* Phones: the bottom tab bar takes the footer's place (footer links live in the menu drawer) */}
+                    {ctx.isMobile ? <MobileBottomNav /> : <LayoutFooter />}
                 </Layout>
 
                 <SettingsModal />

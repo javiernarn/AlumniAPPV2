@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CalendarOutlined, ClockCircleOutlined, DeleteOutlined, EditOutlined, EnvironmentOutlined, ExclamationCircleOutlined, EyeOutlined, MoreOutlined, TeamOutlined, UsergroupAddOutlined } from "@ant-design/icons";
-import { Avatar, Badge, Card, Carousel, Divider, Dropdown, Menu, Modal, Progress, Space, Tag, Tooltip, Typography, message } from "antd";
+import { Avatar, Badge, Card, Carousel, Divider, Dropdown, Menu, Progress, Space, Tag, Tooltip, Typography, message } from "antd";
+import Modal from "~/components/shared/AppModal";
 import moment from "moment";
 import { ROLES } from "~/config/roles";
 import { useIsTouchDevice } from "~/hooks/useIsTouchDevice";
@@ -131,9 +132,15 @@ export const EventCard = ({ event, showEventDetails, onEdit, onDelete }) => {
                             trigger={isTouchDevice ? [] : ["hover"]}
                             open={isTouchDevice ? false : undefined}
                         >
-                            <EyeOutlined
+                            {/* The whole action cell is the button (not just the 14px icon). */}
+                            <button
+                                type="button"
+                                className="event-card-action"
+                                aria-label={`View details: ${event.title}`}
                                 onClick={() => showEventDetails(event)}
-                            />
+                            >
+                                <EyeOutlined />
+                            </button>
                         </Tooltip>,
                         ...(role === ROLES.ADMIN
                             ? [
@@ -275,7 +282,7 @@ export const EventCard = ({ event, showEventDetails, onEdit, onDelete }) => {
                         </div>
 
                         <div className="event-tags">
-                            {event.tags.map((tag) => (
+                            {(event.tags || []).map((tag) => (
                                 <Tag key={tag} className="event-tag">
                                     {tag}
                                 </Tag>

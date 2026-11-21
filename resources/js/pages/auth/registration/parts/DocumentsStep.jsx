@@ -1,3 +1,4 @@
+import "./documentsStep.css";
 import React from "react";
 import {
     CheckCircleOutlined,
@@ -6,13 +7,11 @@ import {
 } from "@ant-design/icons";
 import {
     Alert,
-    Button,
     Card,
     Col,
     Divider,
     Image,
     List,
-    Modal,
     Row,
     Space,
     Tag,
@@ -20,6 +19,8 @@ import {
     Typography,
     Upload,
 } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import moment from "moment";
 import { ID_TYPES } from "~/config/alumniOptions";
 import { useRegistrationContext } from "~/pages/auth/registration/RegistrationContext";
@@ -162,6 +163,7 @@ export default function DocumentsStep() {
                     <Col span={24}>
                         <Card title="Uploaded Documents" size="small">
                             <List
+                                className="uploaded-docs-list"
                                 dataSource={idDocuments}
                                 renderItem={(doc) => {
                                     const docType = ID_TYPES.find(
@@ -173,6 +175,7 @@ export default function DocumentsStep() {
 
                                     return (
                                         <List.Item
+                                            className="uploaded-doc-item"
                                             actions={[
                                                 <Tooltip
                                                     title="View Document"
@@ -222,7 +225,7 @@ export default function DocumentsStep() {
                                             <List.Item.Meta
                                                 avatar={docType?.icon}
                                                 title={
-                                                    <Space>
+                                                    <Space wrap size={[8, 4]}>
                                                         <Text>
                                                             {docType?.label}
                                                         </Text>

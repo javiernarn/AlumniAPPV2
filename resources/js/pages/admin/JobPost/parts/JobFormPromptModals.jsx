@@ -1,6 +1,8 @@
 import React from "react";
 import { CheckCircleOutlined } from "@ant-design/icons";
-import { Button, Modal, Space, Typography } from "antd";
+import { Space, Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import moment from "moment";
 import { COLORS } from "~/config/theme";
 import { useJobPostContext } from "~/pages/admin/JobPost/JobPostContext";
@@ -33,6 +35,7 @@ export default function JobFormPromptModals() {
     return (
         <>
             <Modal
+                rootClassName="job-post-overlay"
                 title="Discard Changes?"
                 open={discardConfirmVisible}
                 onCancel={() => setDiscardConfirmVisible(false)}
@@ -49,6 +52,7 @@ export default function JobFormPromptModals() {
             </Modal>
 
             <Modal
+                rootClassName="job-post-overlay"
                 title="Unsaved Draft Found"
                 open={draftRestoreModalVisible}
                 onCancel={() => {
@@ -99,6 +103,7 @@ export default function JobFormPromptModals() {
             </Modal>
 
             <Modal
+                rootClassName="job-post-overlay"
                 title={
                     <Space>
                         <CheckCircleOutlined

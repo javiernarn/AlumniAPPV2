@@ -2,6 +2,8 @@
 
 import React from "react";
 import "./AlumniRegistration-styles";
+import AuthAppBar from "~/components/shared/AuthAppBar";
+import { InspectGuard } from "~/hooks/usePreventInspect";
 import ScrollProgressOrb from "../admin/ScrollProgress/ScrollProgressOrb";
 import { RegistrationProvider } from "./registration/RegistrationContext";
 import useRegistrationController from "./registration/hooks/useRegistrationController";
@@ -11,6 +13,7 @@ import RegistrationPreview from "./registration/parts/RegistrationPreview";
 import AgreementModal from "./registration/parts/AgreementModal";
 import PrivacyPolicyModal from "./registration/parts/PrivacyPolicyModal";
 import TermsOfServiceModal from "./registration/parts/TermsOfServiceModal";
+import VerifyEmailGate from "./registration/parts/VerifyEmailGate";
 
 /**
  * Alumni registration wizard (5 steps).
@@ -24,12 +27,16 @@ const AlumniRegistration = () => {
         <RegistrationProvider value={ctx}>
             <div className="alumni-registration">
                 <ScrollProgressOrb />
+                {/* Portrait-phone app bar: one shared component, identical on every auth page */}
+                <AuthAppBar />
+                <InspectGuard />
                 <RegistrationThemeToggle />
                 <RegistrationCard />
                 <RegistrationPreview />
                 <AgreementModal />
                 <PrivacyPolicyModal />
                 <TermsOfServiceModal />
+                <VerifyEmailGate />
             </div>
         </RegistrationProvider>
     );

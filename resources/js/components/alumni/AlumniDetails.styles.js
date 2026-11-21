@@ -914,4 +914,100 @@ export const alumniDetailsCss = `
                     border-color: #050810;
                     box-shadow: 0 0 0 2px rgba(250,204,21,0.40);
                 }
+
+                /* ===== Preview drawer header + footer (all phone sizes) ===== */
+                .preview-drawer .ant-drawer-header {
+                    padding: 12px 16px;
+                    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+                }
+                .preview-drawer .ant-drawer-header-title {
+                    min-width: 0;
+                    flex: 1 1 auto;
+                }
+                .preview-drawer .ant-drawer-title {
+                    min-width: 0;
+                    flex: 1 1 auto;
+                }
+                .preview-drawer-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    min-width: 0;
+                }
+                .preview-drawer-title-text {
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .preview-drawer .ant-drawer-extra {
+                    flex: 0 0 auto;
+                }
+                .preview-drawer .ant-drawer-footer {
+                    border-top: 1px solid var(--border);
+                }
+                .preview-drawer-footer {
+                    display: flex;
+                    gap: 10px;
+                    padding: 10px 16px;
+                    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+                }
+                .preview-drawer-footer .ant-btn {
+                    flex: 1 1 0;
+                    min-width: 0;
+                    white-space: normal;
+                }
+
+                /* ===== Layout fix: no dead space under Close, any phone =====
+                   Before: .drawer-content (height:100% + overflow:auto) sat inside
+                   .ant-drawer-body (also overflow:auto). Percentage heights inside a
+                   flex child are unreliable on iOS Safari, so the two scrollers
+                   fought and left an empty band under the footer buttons. Now the
+                   drawer is a strict column: header / body (the ONLY scroller) /
+                   footer, and the home-indicator inset is added exactly once. */
+                /* antd 5.29 puts className="preview-drawer" on .ant-drawer-content,
+                   which is already a flex column (header / body / footer). */
+                .preview-drawer.ant-drawer-content {
+                    max-height: 100%;
+                }
+                .preview-drawer .ant-drawer-header {
+                    flex: 0 0 auto;
+                }
+                .preview-drawer .ant-drawer-body {
+                    flex: 1 1 auto;
+                    min-height: 0;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .preview-drawer .drawer-content {
+                    height: auto;
+                    overflow: visible;
+                }
+                .preview-drawer .ant-drawer-footer {
+                    flex: 0 0 auto;
+                    padding: 0;
+                }
+
+                /* ===== Beat the global drawer padding (css/app-modal.css) =====
+                   app-modal.css sets, with !important and specificity 0,2,1:
+                     .ant-drawer-body   -> padding: 16px 18px calc(16px + safe-bottom)
+                     .ant-drawer-footer -> padding: 12px 18px calc(12px + safe-bottom)
+                   Those stacked on top of .preview-drawer-footer's own padding,
+                   leaving ~90px of empty band under Close on iPhones. The root
+                   class below raises specificity so this drawer owns its spacing,
+                   and the home-indicator inset is applied exactly once (footer). */
+                html .preview-drawer-root .ant-drawer-body {
+                    padding: 0 !important;
+                }
+                html .preview-drawer-root .ant-drawer-footer {
+                    padding: 0 !important;
+                    border-top: 1px solid var(--border);
+                }
+                html .preview-drawer-root .preview-drawer-footer {
+                    padding: 10px 16px max(10px, env(safe-area-inset-bottom, 0px));
+                }
+                html .preview-drawer-root .ant-drawer-header {
+                    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px !important;
+                }
 `;

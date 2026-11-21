@@ -1,6 +1,8 @@
 import React from "react";
 import { FileOutlined, WarningOutlined } from "@ant-design/icons";
-import { Button, Modal, Space, Typography } from "antd";
+import { Space, Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import moment from "moment";
 import { COLORS } from "~/config/theme";
 import { useJobPostContext } from "~/pages/admin/JobPost/JobPostContext";
@@ -28,6 +30,7 @@ export default function ApplicationPromptModals() {
     return (
         <>
             <Modal
+                rootClassName="job-post-overlay"
                 title={
                     <Space>
                         <WarningOutlined style={{ color: COLORS.antdGold }} />
@@ -74,6 +77,7 @@ export default function ApplicationPromptModals() {
             </Modal>
 
             <Modal
+                rootClassName="job-post-overlay"
                 title={
                     <Space>
                         <FileOutlined style={{ color: COLORS.antdBlue }} />

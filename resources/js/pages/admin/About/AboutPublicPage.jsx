@@ -1,17 +1,16 @@
 "use client"
 import { useEffect, useState, useRef } from "react"
 import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Space,
-  Tag,
-  Divider,
-  Button,
-  Tooltip,
-} from "antd"
-import {
+    Card,
+    Row,
+    Col,
+    Typography,
+    Space,
+    Tag,
+    Divider,
+    Tooltip,
+} from "antd";
+import Button from "~/components/shared/AsyncButton";import {
   RocketOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
@@ -24,6 +23,8 @@ import {
   MoonOutlined,
 } from "@ant-design/icons"
 import logo from "~/assets/images/OCC_LOGO.png"
+import AuthAppBar from "~/components/shared/AuthAppBar"
+import { InspectGuard } from "~/hooks/usePreventInspect";
 import { useAppTheme } from "~/hooks/useAppTheme"
 import ScrollProgressOrb from "../ScrollProgress/ScrollProgressOrb"
 import "./AboutPage.css"
@@ -43,38 +44,6 @@ const AboutPublicPage = () => {
             window.location.href = "/login";
             return;
         }
-
-          //  Prevent //
-      useEffect(() => {
-      const disableContextMenu = (e) => {
-        e.preventDefault();
-      };
-
-      document.addEventListener("contextmenu", disableContextMenu);
-
-      return () => {
-        document.removeEventListener("contextmenu", disableContextMenu);
-      };
-    }, []);
-
-    useEffect(() => {
-      const handleKeyDown = (e) => {
-        if (
-          e.key === "F12" ||
-          (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
-          (e.ctrlKey && e.key === "u")
-        ) {
-          e.preventDefault();
-          return false;
-        }
-      };
-
-      document.addEventListener("keydown", handleKeyDown);
-
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    }, []);
 
   // ============ THEME SYNC FROM FORMLOGIN ============
   // Now backed by the shared useAppTheme hook (same cookie + secureLocalStorage
@@ -104,6 +73,8 @@ const AboutPublicPage = () => {
   
   return (
     <>
+      <AuthAppBar />
+      <InspectGuard />
       <div className="page-theme-toggle">
         <button
           type="button"
@@ -180,7 +151,7 @@ const AboutPublicPage = () => {
               <img src={logo} alt="OCC Logo" className="about-hero__logo" />
               <div className="about-hero__brand-meta">
                 <Tag className="about-chip" icon={<CheckCircleOutlined />}>
-                  Official Institutional Platform
+                  Official Alumni Association Platform
                 </Tag>
                 <Text className="about-hero__eyebrow">About the System</Text>
               </div>
@@ -188,13 +159,6 @@ const AboutPublicPage = () => {
             <Title level={1} className="about-hero__title">
               Alumni Tracing <span className="grad-text">Management System</span>
             </Title>
-            <Paragraph className="about-hero__lead">
-              A modern web-based platform built to keep you connected with
-              your alma mater. Register and manage your profile, discover
-              events and job opportunities, browse fellow graduates, and
-              stay in touch with the Alumni Office — all in one secure
-              place.
-            </Paragraph>
             <Space size={12} wrap className="about-hero__cta">
               <Button
                 type="primary"
@@ -270,21 +234,19 @@ const AboutPublicPage = () => {
               <Card className="about-card about-card--overview" bordered={false}>
                 <Tag className="section-chip">Overview</Tag>
                 <Title level={2} className="section-title">
-                  Connecting graduates with their institution.
+                  Connecting graduates with their alumni community.
                 </Title>
                 <Paragraph className="section-paragraph">
                   The Alumni Tracing Management System is your online home
-                  base for staying connected with the school after
-                  graduation. It gives you one place to manage your profile,
-                  discover what's happening on campus, and keep in touch with
-                  the Alumni Office.
+                  base for staying connected with the Alumni Association after graduation. It gives you one place to manage your profile,
+                  discover what's happening in the alumni community, and keep in touch with
+                  the Guidance Counselor.
                 </Paragraph>
                 <Paragraph className="section-paragraph">
                   After a simple registration process, you can maintain your
                   personal, academic, and professional information, browse
                   the alumni directory to find batchmates, register for
-                  upcoming events, and explore job opportunities shared by
-                  the institution and its partners.
+                  upcoming events, and explore job opportunities shared by the Alumni Association and its partners.
                 </Paragraph>
                 <Paragraph className="section-paragraph">
                   The platform also keeps you engaged through messaging,
@@ -391,13 +353,6 @@ const AboutPublicPage = () => {
               <Title level={2} className="section-title">
                 A reliable platform for alumni excellence.
               </Title>
-              <Paragraph className="section-paragraph">
-                The Alumni Tracing Management System makes it simple to stay
-                connected with your alma mater — manage your profile, join
-                events, discover job opportunities, and reach the Alumni
-                Office — helping graduates and the institution grow
-                together.
-              </Paragraph>
               <Divider className="about-divider" />
               <Space size={12} wrap>
                 <Tag className="tech-tag">Secure Authentication</Tag>
@@ -415,4 +370,4 @@ const AboutPublicPage = () => {
     </>
   )
 }
-export default AboutPublicPage
+export default AboutPublicPage

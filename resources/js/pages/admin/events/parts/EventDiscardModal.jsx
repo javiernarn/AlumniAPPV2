@@ -1,6 +1,8 @@
 import React from "react";
 import { WarningOutlined } from "@ant-design/icons";
-import { Button, Modal, Space } from "antd";
+import { Space } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { useEventsContext } from "~/pages/admin/events/EventsContext";
 
 export default function EventDiscardModal() {

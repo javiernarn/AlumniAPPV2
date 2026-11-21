@@ -8,17 +8,17 @@ import {
     UndoOutlined,
 } from "@ant-design/icons";
 import {
-    Button,
     DatePicker,
     Form,
     Image,
     Input,
-    Modal,
     Space,
     Tooltip,
     Typography,
     Upload,
 } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { COLORS } from "~/config/theme";
 import { useGalleryContext } from "~/pages/admin/Gallery/GalleryContext";
 import StagedThumbs from "~/pages/admin/Gallery/parts/StagedThumbs";

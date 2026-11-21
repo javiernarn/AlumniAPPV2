@@ -6,6 +6,7 @@ import {
     TeamOutlined,
     ThunderboltOutlined,
 } from "@ant-design/icons";
+import AuthAppBar from "~/components/shared/AuthAppBar";
 import { useLoginContext } from "~/components/login/LoginContext";
 import FindUserForm from "~/components/login/parts/FindUserForm";
 import ForgotPasswordForm from "~/components/login/parts/ForgotPasswordForm";
@@ -29,6 +30,8 @@ export default function LoginPage() {
             <div className="login-page__rive" aria-hidden="true">
                 {/* <DragBgRiveComponent /> */}
             </div>
+            {/* Portrait-phone app bar: one shared component, identical on every auth page */}
+            <AuthAppBar />
             <div className="login-shell">
                 {/* ============ LEFT: BRAND PANEL ============ */}
                 <aside className="login-brand">
@@ -52,8 +55,7 @@ export default function LoginPage() {
 
                     <div className="login-brand__top">
                         <span className="login-brand__chip">
-                            <ThunderboltOutlined /> Official Institutional
-                            Platform
+                            <ThunderboltOutlined /> Official Alumni Association Platform
                         </span>
 
                         <h1 className="login-brand__title">
@@ -67,8 +69,7 @@ export default function LoginPage() {
                             The ATMS is a comprehensive solution for managing
                             alumni information while promoting continuous
                             collaboration, professional growth, and
-                            institutional excellence — empowering graduates and
-                            institutions to grow together.
+                            professional excellence — empowering graduates and the Alumni Association to grow together.
                         </p>
 
                         <div className="login-brand__features has-rive-center">
@@ -93,8 +94,7 @@ export default function LoginPage() {
                                 <div className="meta">
                                     <strong>Alumni Network</strong>
                                     <span>
-                                        Stay in touch with classmates and
-                                        faculty.
+                                        Stay in touch with classmates and fellow alumni.
                                     </span>
                                 </div>
                             </div>
@@ -211,6 +211,10 @@ export default function LoginPage() {
                     {currentView === "reset-password" && <ResetPasswordForm />}
                 </section>
             </div>
+            <p className="auth-legal">
+                Authorized users only. By continuing you agree to the ATMS Terms of
+                Service and Privacy Policy.
+            </p>
         </div>
     );
 }

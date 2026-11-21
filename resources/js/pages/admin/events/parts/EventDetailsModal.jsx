@@ -1,4 +1,6 @@
-import { Menu, Modal, Dropdown, Button, Row, Col, Card, Tag } from "antd";
+import { Menu, Dropdown, Row, Col, Card, Tag } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import {
     EditOutlined,
     UsergroupAddOutlined,
@@ -154,7 +156,7 @@ export const EventDetailsModal = ({
                                 {/* Event Tags */}
                                 <Card title="Event Tags" className="tags-card">
                                     <div className="event-tags-detailed">
-                                        {event.tags.map((tag) => (
+                                        {(Array.isArray(event.tags) ? event.tags : []).map((tag) => (
                                             <Tag
                                                 key={tag}
                                                 className="event-tag-detailed"

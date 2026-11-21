@@ -23,14 +23,14 @@
                     "{{ $chatMessage->message }}"
                 </p>
 
-                @if($chatMessage->image_path && file_exists(storage_path('app/private/' . $chatMessage->image_path)))
+                @if($chatMessage->image_path && \Illuminate\Support\Facades\Storage::disk('private')->exists($chatMessage->image_path))
                 <div style="margin-top: 15px; text-align: center;">
-                    <img src="{{ $message->embed(storage_path('app/private/' . $chatMessage->image_path)) }}" alt="Attached Image" style="max-width: 100%; border-radius: 4px; border: 1px solid #dee2e6;">
+                    <img src="{{ $message->embedData(\Illuminate\Support\Facades\Storage::disk('private')->get($chatMessage->image_path), basename($chatMessage->image_path), \Illuminate\Support\Facades\Storage::disk('private')->mimeType($chatMessage->image_path)) }}" alt="Attached Image" style="max-width: 100%; border-radius: 4px; border: 1px solid #dee2e6;">
                 </div>
                 @endif
             </div>
 
-            <p>Please log in to the Alumni Portal to view the full conversation and respond to this message.</p>
+            <p>Please log in to the Alumni Tracing Management System to view the full conversation and respond to this message.</p>
 
             <div style="text-align: center; margin: 35px 0;">
                 <a href="{{ config('app.url') }}/login?redirect=/messages" style="display: inline-block; background-color: #1a1a2e; color: #ffffff; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Login to Website</a>
@@ -39,7 +39,7 @@
             <div style="background-color: #f1f1f1; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; font-size: 14px; color: #333;">
                 <strong>{{ $adminName }}</strong><br>
                 <a href="mailto:{{ $admin->email }}" style="color: #1a1a2e; text-decoration: none;">{{ $admin->email }}</a><br>
-                <em>Administrator / Guidance Office</em>
+                <em>Guidance Counselor / System Administrator</em>
             </div>
         </div>
 

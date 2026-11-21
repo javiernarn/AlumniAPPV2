@@ -1,4 +1,6 @@
-import { Modal, Space, Button, Alert } from "antd";
+import { Space, Alert } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import {
     PhoneFilled,
     PhoneOutlined,

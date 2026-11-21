@@ -30,6 +30,8 @@ class SecurityHeaders
         );
         // Older browsers only understand X-Frame-Options; frame-ancestors in the CSP is the modern equivalent.
         $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+        $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
 
         $headerName = filter_var(env('CSP_REPORT_ONLY', true), FILTER_VALIDATE_BOOLEAN)
             ? 'Content-Security-Policy-Report-Only'
@@ -46,7 +48,13 @@ class SecurityHeaders
         $style = ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'];
         $font = ["'self'", 'https://fonts.gstatic.com'];
         $img = ["'self'", 'data:', 'blob:'];
-        $connect = ["'self'"];
+        // Weather widget (open-meteo) and Cloudflare analytics beacon injected by the host.
+        $connect = ["'self'", 'https://api.open-meteo.com', 'https://cloudflareinsights.com',
+            // OCC Services page reachability checks (fetch no-cors) to the other OCC systems.
+            'https://www.occ.edu.ph', 'https://www.sis.occph.com', 'https://www.admission.occph.com',
+            'https://www.csdl.occph.com', 'https://www.alumni.occph.com', 'https://sclfapp.ethiodeploy.app',
+            'https://antiquina-ota.ethiodeploy.app'];
+        $script[] = 'https://static.cloudflareinsights.com';
 
         // Local dev only: the Vite dev server serves modules/assets from its own origin,
         // pushes HMR over a websocket, and the React Refresh preamble is an inline script.

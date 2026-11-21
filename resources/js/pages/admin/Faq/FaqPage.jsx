@@ -2,9 +2,19 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import {
-  Row, Col, Card, Input, Typography, Collapse, Tag, Button, Empty, Tooltip, Space, Badge,
-} from "antd"
-import {
+    Row,
+    Col,
+    Card,
+    Input,
+    Typography,
+    Collapse,
+    Tag,
+    Empty,
+    Tooltip,
+    Space,
+    Badge,
+} from "antd";
+import Button from "~/components/shared/AsyncButton";import {
   SearchOutlined, QuestionCircleOutlined, AppstoreOutlined, SafetyCertificateOutlined, MessageOutlined,
   BulbOutlined, RocketOutlined, MailOutlined, CheckCircleOutlined, ThunderboltOutlined,
   ArrowRightOutlined, FireOutlined,
@@ -274,8 +284,7 @@ const FaqPage = () => {
                   Can’t find the answer you’re looking for?
                 </Title>
                 <Paragraph className="faq-cta__text">
-                  Reach out to the Alumni Office. Our team will get back to
-                  you with the help you need — whether it’s account access,
+                  Reach out to the Guidance Counselor. The Guidance Counselor will get back to you with the help you need — whether it’s account access,
                   event details, or technical issues.
                 </Paragraph>
               </Col>

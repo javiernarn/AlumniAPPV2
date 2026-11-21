@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Card, Col, Row, Typography } from "antd";
+import { Card, Col, Row, Typography } from "antd";
+import Button from "~/components/shared/AsyncButton";
 import { ROLES } from "~/config/roles";
 import { useEventsContext } from "~/pages/admin/events/EventsContext";
 import { EventCard } from "~/pages/admin/events/parts/EventCard";
@@ -26,7 +27,7 @@ export default function EventsDisplay() {
                         <Text type="secondary">
                             {role === ROLES.ADMIN
                                 ? "Try adjusting your filters or create a new event to get started."
-                                : "No events found at the moment. Only administrators are authorized to create events. If you would like to request an event, please message the administrator with complete event details for review and approval, or visit the Guidance Counselor's Office for further assistance."}
+                                : "No events found at the moment. Only the Guidance Counselor (Administrator) is authorized to create events. If you would like to request an event, please message the Guidance Counselor with complete event details for review and approval, or visit the Guidance Counselor for further assistance."}
                         </Text>
                         <br />
                         <Button type="primary" onClick={clearAllFilters}>

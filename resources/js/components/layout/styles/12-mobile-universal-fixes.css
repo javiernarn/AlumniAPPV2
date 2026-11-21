@@ -1,0 +1,148 @@
+/* =====================================================================
+   12 - Mobile / PWA fixes for ALL phones (loaded last on purpose)
+   Scope: the mobile navigation drawer and the shell footer.
+   Every rule uses env() with a 0px fallback, so phones without a notch or
+   home indicator (most Androids, older iPhones) get exactly 0 extra space.
+   ===================================================================== */
+
+/* ---- 1. Drawer width: one fixed, comfortable width -------------------
+   86vw on small phones, never wider than 300px. A fixed width keeps the logo
+   title, the menu rows and the developer credit on the same centre line. */
+html .app-nav-drawer.ant-drawer-left .ant-drawer-content-wrapper {
+  width: min(86vw, 300px) !important;
+  min-width: 0 !important;
+  max-width: min(86vw, 300px) !important;
+}
+
+/* ---- 2. Drawer is a strict column: header / scrolling menu / footer ---
+   app-modal.css gives every .ant-drawer-body 16px 18px + safe-area padding
+   with !important, which shoved the menu in and left a blank band under the
+   last item. The "html" prefix wins on specificity, so the menu is flush. */
+.app-nav-drawer .ant-drawer-content {
+  max-height: 100%;
+}
+
+html .app-nav-drawer .ant-drawer-header {
+  flex: 0 0 auto;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px !important;
+}
+
+html .app-nav-drawer .ant-drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 8px 0 !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+html .app-nav-drawer .ant-drawer-footer {
+  flex: 0 0 auto;
+  padding: 0 !important;
+  border-top: 0 !important;
+}
+
+/* ---- 3. Developer credit ---------------------------------------------
+   Two clean, centred lines that match the drawer width:
+       </> DEVELOPED BY
+       Antiquina, Jonee John R.
+   On the desktop footer the same markup sits inline on one row. */
+.app-footer-credits {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 6px;
+}
+
+.app-footer-credit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.app-footer-credit-icon {
+  font-size: 1.05em;
+}
+
+.app-footer-credits .app-footer-credit-link {
+  display: inline-block;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text, #1f2933);
+}
+
+.app-footer-credits .app-footer-credit-link:hover,
+.app-footer-credits .app-footer-credit-link:focus-visible {
+  text-decoration: underline;
+}
+
+[data-theme="black"] .app-footer-credits .app-footer-credit-link {
+  color: var(--text, #e5e7eb);
+}
+
+html .app-nav-drawer .ant-layout-footer.app-footer {
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  text-align: center;
+}
+
+html .app-nav-drawer .app-footer-inner {
+  width: 100%;
+  justify-content: center;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Two lines, both centred on the same axis:
+       </> Developed by
+       Antiquina, Jonee John R.
+   The label and the name share one column (same width as the drawer), so
+   nothing sits left or right of the other. */
+html .app-nav-drawer .app-footer-inner .app-footer-credits {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 4px 0;
+  max-width: 100%;
+  white-space: normal !important;
+  text-align: center;
+  line-height: 1.3 !important;
+}
+
+html .app-nav-drawer .app-footer-credit-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 1;
+}
+
+html .app-nav-drawer .app-footer-credit-link {
+  display: block;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ---- 4. Footer keeps the home-indicator inset in portrait ------------
+   06-footer.css sets padding-bottom with env(safe-area-inset-bottom), but
+   the @media (max-width: 768px) rule right below it uses the padding
+   shorthand with !important and silently wiped it, so on iPhones (PWA) the
+   footer text sat under the home bar. Landscape is handled in 11-overrides-b. */
+@media (max-width: 768px) and (orientation: portrait) {
+  .ant-layout-footer.app-footer {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}

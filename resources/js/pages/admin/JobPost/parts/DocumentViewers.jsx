@@ -10,12 +10,15 @@ import {
     LinkOutlined,
     PictureOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Modal, Space, Spin, Tooltip, Typography } from "antd";
+import { Card, Space, Spin, Tooltip, Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { COLORS } from "~/config/theme";
 import { GalleryPhotoLightbox } from "~/pages/admin/JobPost/parts/GalleryPhotoLightbox";
 import { getIdTypeLabel } from "~/pages/admin/JobPost/parts/jobPostHelpers";
 import { buildImageUrl } from "~/pages/admin/JobPost/parts/jobPostUtils";
 import { useIsTouchDevice } from "~/hooks/useIsTouchDevice";
+import { saveImage } from "~/utils/saveImage";
 
 const { Text } = Typography;
 
@@ -50,6 +53,7 @@ export const DocumentViewerModal = ({
 
     return (
         <Modal
+            rootClassName="job-post-overlay"
             open={visible}
             onCancel={onClose}
             footer={
@@ -272,9 +276,19 @@ export const ResumeViewer = ({ fileUrl, fileName = "Resume" }) => {
                         <Button
                             size="small"
                             icon={<DownloadOutlined />}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            {...(isImage
+                                ? {
+                                      onClick: () =>
+                                          saveImage({
+                                              url: fileUrl,
+                                              filename: fileName,
+                                          }),
+                                  }
+                                : {
+                                      href: fileUrl,
+                                      target: "_blank",
+                                      rel: "noopener noreferrer",
+                                  })}
                             style={{ borderRadius: 6 }}
                         >
                             Download
@@ -584,9 +598,16 @@ export const IdDocumentCard = ({ doc, index }) => {
                         <Button
                             size="small"
                             icon={<DownloadOutlined />}
-                            href={fileUrl}
-                            target="_blank"
-                            download
+                            {...(isImage
+                                ? {
+                                      onClick: () =>
+                                          saveImage({ url: fileUrl }),
+                                  }
+                                : {
+                                      href: fileUrl,
+                                      target: "_blank",
+                                      download: true,
+                                  })}
                             style={{ borderRadius: 6, fontSize: 11 }}
                         >
                             Save

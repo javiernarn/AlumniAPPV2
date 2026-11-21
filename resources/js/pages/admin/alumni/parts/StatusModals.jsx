@@ -4,7 +4,8 @@ import {
     ClockCircleOutlined,
     CloseCircleOutlined,
 } from "@ant-design/icons";
-import { Form, Input, Modal, Select, Space, Tag, Typography } from "antd";
+import { Form, Input, Select, Space, Tag, Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
 import { COLORS } from "~/config/theme";
 
 const { Option } = Select;
@@ -59,7 +60,7 @@ export const StatusUpdateModal = ({
             inactive:
                 "Alumni profile will be hidden from the directory and marked as inactive.",
             rejected:
-                "Alumni account will be rejected. The alumni will see your admin notes when they try to log in, with instructions to contact the Administrator Office for further clarification.",
+                "Alumni account will be rejected. The alumni will see your admin notes when they try to log in, with instructions to contact the Guidance Counselor (Administrator) for further clarification.",
         };
         return descriptions[status] || "";
     };
@@ -216,7 +217,7 @@ export const BulkStatusUpdateModal = ({
             inactive:
                 "Alumni profile will be hidden from the directory and marked as inactive.",
             rejected:
-                "Selected alumni accounts will be rejected. They will see your admin notes on login with instructions to contact the Administrator Office.",
+                "Selected alumni accounts will be rejected. They will see your admin notes on login with instructions to contact the Guidance Counselor (Administrator).",
         };
         return descriptions[status] || "";
     };

@@ -2,7 +2,6 @@ import React from "react";
 import { CheckCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import {
     Alert,
-    Button,
     Checkbox,
     Col,
     Divider,
@@ -11,6 +10,7 @@ import {
     Space,
     Typography,
 } from "antd";
+import Button from "~/components/shared/AsyncButton";
 import { COLORS } from "~/config/theme";
 import { useRegistrationContext } from "~/pages/auth/registration/RegistrationContext";
 
@@ -163,8 +163,7 @@ export default function ReviewSubmitStep() {
                 <Col xs={24}>
                     <Form.Item name="contactPermission" valuePropName="checked">
                         <Checkbox>
-                            I give permission to be contacted by the university
-                            and other alumni for networking opportunities
+                            I give permission to be contacted by the Alumni Association and other alumni for networking opportunities
                         </Checkbox>
                     </Form.Item>
                 </Col>

@@ -2,7 +2,8 @@ import "antd-css-utilities/utility.min.css";
 import { ConfigProvider, Empty, Spin } from "antd";
 import React, { Suspense, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClientProvider } from "react-query";
+import { queryClient } from "~/utils/queryClient";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "./assets/scss/app.scss";
 import NoLayout from "./components/NoLayout";
@@ -18,6 +19,14 @@ import {
 } from "./routes";
 import { getAntdTheme } from "~/config/antdTheme";
 import { useAppTheme } from "~/hooks/useAppTheme";
+import "~/utils/pwaInstall"; // start listening for the browser's install event before React mounts
+import { registerServiceWorker } from "~/utils/registerServiceWorker";
+import InstallPrompt from "~/components/shared/InstallPrompt";
+import OfflineNotice from "~/components/shared/OfflineNotice";
+import UpdateNotice from "~/components/shared/UpdateNotice";
+
+// Offline app shell + update flow (public/sw.js). Registering never asks for permission.
+registerServiceWorker();
 
 const NonAuthmiddleware = ({
     component: Component,
@@ -45,18 +54,6 @@ const PageFallback = () => (
     </div>
 );
 
-const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            refetchOnWindowFocus: false,
-            refetchOnMount: false,
-            refetchOnReconnect: false,
-            retry: false,
-            staleTime: 5 * 60 * 1000,
-        },
-    },
-});
-
 function Main() {
     useLoader();
     const { theme: appTheme } = useAppTheme();
@@ -75,6 +72,11 @@ function Main() {
                 renderEmpty={() => <Empty description="No Data" />}
             >
                 <Router>
+                    {/* App-like extras shared with the SCLF app: offline banner,
+                        "new version" pop-up and the install-to-home-screen banner. */}
+                    <OfflineNotice />
+                    <UpdateNotice />
+                    <InstallPrompt />
                     {/* Pages are lazy-loaded (see routes/lazyPages.js) */}
                     <Suspense fallback={<PageFallback />}>
                     <Switch>

@@ -21,6 +21,7 @@ import {
     CheckCircleFilled,
 } from "@ant-design/icons";
 import logo from "~/assets/images/site-logo.png";
+import sealWhite from "~/assets/images/occaa-logo-white.png";
 import { useAppTheme } from "~/hooks/useAppTheme";
 import usePreventInspect, { ZoomWarningModal } from "~/hooks/usePreventInspect";
 import { BASE_URL } from "~/utils/constant";
@@ -261,7 +262,7 @@ const PublicContactPage = () => {
                     Get in <span className="grad">Touch</span>
                 </Title>
                 <Paragraph className="pcon-hero-lead">
-                    Questions about the Alumni Portal, an event, or your account?
+                    Questions about the Alumni Tracing Management System, an event, or your account?
                     Reach the <strong>ATMS</strong> team directly below, or send a
                     message and we'll get back to you.
                 </Paragraph>
@@ -308,7 +309,7 @@ const PublicContactPage = () => {
                             <div className="pcon-info-item">
                                 <span className="pcon-info-icon"><ClockCircleOutlined /></span>
                                 <div>
-                                    <strong>Office Hours</strong>
+                                    <strong>Availability</strong>
                                     <p>Monday – Friday, 8:00 AM – 5:00 PM</p>
                                 </div>
                             </div>
@@ -435,6 +436,15 @@ const PublicContactPage = () => {
 
             {/* ============ FOOTER ============ */}
             <footer className="ph-footer">
+                <img
+                    className="ph-footer-seal ph-footer-seal--mark"
+                    src={sealWhite}
+                    alt=""
+                    aria-hidden="true"
+                    draggable="false"
+                    loading="lazy"
+                    decoding="async"
+                />
                 <div className="ph-footer-inner">
                     <div className="ph-footer-brand-col">
                         <div className="ph-footer-brand">
@@ -443,17 +453,20 @@ const PublicContactPage = () => {
                         </div>
                         <Paragraph className="ph-footer-desc">
                             Connecting Opol Community College alumni worldwide, fostering
-                            lifelong relationships with the institution, and supporting
+                            lifelong relationships with Opol Community College, and supporting
                             the next generation of OCCians.
                         </Paragraph>
-                        <div className="ph-footer-social">
-                            <a href="#" aria-label="Facebook"><FacebookOutlined /></a>
-                            <a href="#" aria-label="Twitter"><TwitterOutlined /></a>
-                            <a href="#" aria-label="Instagram"><InstagramOutlined /></a>
+                        <div className="ph-footer-social-row">
+                            <div className="ph-footer-social">
+                                <a href="#" aria-label="Facebook"><FacebookOutlined /></a>
+                                <a href="#" aria-label="Twitter"><TwitterOutlined /></a>
+                                <a href="#" aria-label="Instagram"><InstagramOutlined /></a>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
+                    <div className="ph-footer-links-col">
+                        <img className="ph-footer-seal ph-footer-seal--links" src={sealWhite} alt="" aria-hidden="true" draggable="false" loading="lazy" decoding="async" />
                         <div className="ph-footer-heading">Quick Links</div>
                         <div className="ph-footer-links">
                             <button onClick={goHome}>Home</button>
@@ -468,7 +481,7 @@ const PublicContactPage = () => {
 
                     <div>
                         <div className="ph-footer-heading">ATMS</div>
-                        <div className="ph-footer-links">
+                        <div className="ph-footer-links ph-footer-links--stack">
                             <button onClick={scrollToTop} style={{ color: "var(--ph-accent)" }}>
                                 Contact Us
                             </button>
@@ -481,13 +494,19 @@ const PublicContactPage = () => {
                 <div className="ph-footer-bottom">
                     <span>ATMS - All rights reserved.</span>
                     <span className="ph-footer-credit">
-                        <code className="ph-footer-tag">{"</>"}</code>
-                        Developed by <strong className="ph-footer-dev-name"> <a href="https://www.facebook.com/EphemeralKun/" target="_blank" rel="noopener noreferrer">Antiquina, Jonee John R.</a></strong>
-                        <span className="ph-footer-dot">•</span> Secure
-                        <span className="ph-footer-dot">•</span> Alumni Association
-                        <span className="ph-footer-dot">•</span> Events
-                        <span className="ph-footer-dot">•</span> © {"2025"} ATMS
-                        <span className="ph-footer-dot">•</span> Built with <span className="ph-footer-heart">❤️</span>
+                        <span className="ph-footer-credit-dev">
+                            <code className="ph-footer-tag">{"</>"}</code>
+                            <span>Developed by</span>
+                            <strong className="ph-footer-dev-name"><a href="https://www.facebook.com/EphemeralKun/" target="_blank" rel="noopener noreferrer">Antiquina, Jonee John R.</a></strong>
+                        </span>
+                        <span className="ph-footer-dot ph-footer-dot--group">•</span>
+                        <span className="ph-footer-credit-meta">
+                            <span>Secure</span><span className="ph-footer-dot">•</span><span>Alumni Association</span><span className="ph-footer-dot">•</span><span>Events</span>
+                        </span>
+                        <span className="ph-footer-dot ph-footer-dot--group">•</span>
+                        <span className="ph-footer-credit-meta">
+                            <span>© {"2025"} ATMS</span><span className="ph-footer-dot">•</span><span>Built with <span className="ph-footer-heart">❤️</span></span>
+                        </span>
                     </span>
                 </div>
             </footer>

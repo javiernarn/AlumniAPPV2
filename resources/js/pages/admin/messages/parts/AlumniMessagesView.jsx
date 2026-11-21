@@ -1,12 +1,26 @@
 import React from "react";
 import { createPortal } from "react-dom";
+import { useHistory } from "react-router-dom";
 import { Layout } from "~/components";
 import { ROLES } from "~/config/roles";
 import { useMessagesContext } from "~/pages/admin/messages/MessagesContext";
 import DeleteConfirmModal from "~/pages/admin/messages/parts/DeleteConfirmModal";
 import MessageActionModal from "~/pages/admin/messages/parts/MessageActionModal";
+import useBubbleGestures from "~/pages/admin/messages/hooks/useBubbleGestures";
+import useMobileChatViewport, {
+    useIsPhoneViewport,
+} from "~/pages/admin/messages/hooks/useMobileChatViewport";
 
 export default function AlumniMessagesView() {
+    const history = useHistory();
+    // Phones: the chat becomes a full-screen panel pinned to the *visible*
+    // viewport, so the iOS/Android keyboard can never push the composer or the
+    // text being typed out of sight (see useMobileChatViewport).
+    const isPhone = useIsPhoneViewport();
+    useMobileChatViewport(isPhone);
+    const goBack = () =>
+        history.length > 1 ? history.goBack() : history.push("/home");
+
     const {
         adminInfo,
         alumniUnreadCount,
@@ -18,9 +32,6 @@ export default function AlumniMessagesView() {
         groupedMessages,
         formatDateSeparator,
         inlineEditMessageId,
-        handleDoubleClick,
-        handleLongPressStart,
-        handleLongPressEnd,
         renderMessageImage,
         renderInlineEditInput,
         shouldShowEditIndicator,
@@ -40,13 +51,23 @@ export default function AlumniMessagesView() {
         lightboxImage,
         closeLightbox,
     } = useMessagesContext();
+    const { getBubbleProps } = useBubbleGestures();
 
-    return (
-        <Layout>
+    const chat = (
+        <>
             <div className="alumni-messages-container">
                 {/* Header */}
                 <div className="alumni-messages-header">
                     <div className="alumni-header-left">
+                        <button
+                            type="button"
+                            className="alumni-back-btn"
+                            onClick={goBack}
+                            aria-label="Back"
+                            title="Back"
+                        >
+                            <span aria-hidden="true">‹</span>
+                        </button>
                         <img
                             src={adminInfo.avatar || "/placeholder.svg"}
                             alt="Guidance Counselor"
@@ -143,34 +164,14 @@ export default function AlumniMessagesView() {
                                                 className="alumni-avatar"
                                             />
                                             <span className="alumni-sender-name">
-                                                Guidance Counselor (Admin)
+                                                Guidance Counselor (Administrator)
                                             </span>
                                         </div>
                                     )}
 
                                     <div
-                                        className={`alumni-message ${isMyMessage ? "sent" : "received"} ${isEditing ? "editing" : ""}`}
-                                        onDoubleClick={() =>
-                                            !isEditing &&
-                                            handleDoubleClick(groupedItem.id)
-                                        }
-                                        onMouseDown={() =>
-                                            !isEditing &&
-                                            handleLongPressStart(
-                                                groupedItem.id,
-                                                groupedItem,
-                                            )
-                                        }
-                                        onMouseUp={handleLongPressEnd}
-                                        onMouseLeave={handleLongPressEnd}
-                                        onTouchStart={() =>
-                                            !isEditing &&
-                                            handleLongPressStart(
-                                                groupedItem.id,
-                                                groupedItem,
-                                            )
-                                        }
-                                        onTouchEnd={handleLongPressEnd}
+                                        className={`alumni-message ${isMyMessage ? "sent" : "received"} ${isEditing ? "editing" : ""} ${groupedItem.image_path || groupedItem.image_url ? "has-image" : ""}`}
+                                        {...getBubbleProps(groupedItem, isEditing)}
                                     >
                                         {renderMessageImage(
                                             groupedItem.image_path,
@@ -289,6 +290,9 @@ export default function AlumniMessagesView() {
                             }
                             disabled={isRestricted || sending}
                             className="alumni-message-input"
+                            rows={1}
+                            enterKeyHint="send"
+                            autoComplete="off"
                         />
 
                         <button
@@ -341,6 +345,20 @@ export default function AlumniMessagesView() {
 
             {/* Delete Confirmation Modal (Black Theme) */}
             {<DeleteConfirmModal />}
-        </Layout>
+        </>
     );
+
+    // Phones: render on <body> (outside the app shell) so no transformed /
+    // contained ancestor can trap the fixed-position chat; the shell stays
+    // mounted underneath. Desktop keeps the normal in-shell layout.
+    if (isPhone && typeof document !== "undefined") {
+        return (
+            <>
+                <Layout>{null}</Layout>
+                {createPortal(chat, document.body)}
+            </>
+        );
+    }
+
+    return <Layout>{chat}</Layout>;
 }

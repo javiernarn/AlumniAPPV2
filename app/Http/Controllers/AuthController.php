@@ -31,17 +31,83 @@ class AuthController extends Controller
         // not a proper 429. The middleware handles this correctly
         // (429 + Retry-After header) before the request even reaches
         // this method.
+        // Validate input types: array/oversized values used to reach Hash::check and 500.
+        $request->validate([
+            'email' => 'required|string|max:255',
+            'password' => 'required|string|max:255',
+        ]);
+
         $email = $request->email;
         $password = $request->password;
 
         $user = User::where('email', $email)->first();
 
+        // SECURITY: one generic message for "no such account" and "wrong
+        // password" (previously two different messages let anyone discover
+        // which emails are registered). A dummy hash check on the missing-user
+        // path keeps response time similar.
+        $invalid = fn () => response(['message' => 'Invalid email or password.'], 403);
+
         if (!$user) {
-            return response(['message' => 'This account has not been registered'], 403);
+            Hash::check($password, '$2y$10$O.69Nmoqa4Sxfd297X7uieMBDehFxfoj72DdJooMpzyvnWWetOToW');
+            $this->logFailedLogin($request, $email, 'unknown_account');
+            return $invalid();
         }
 
         if (!Hash::check($password, $user->password)) {
-            return response(['message' => 'Wrong password'], 403);
+            $this->logFailedLogin($request, $email, 'bad_password');
+            return $invalid();
+        }
+
+        // ---- Gate checks BEFORE any token or cookie is issued ----------------
+        // Previously the token + HttpOnly cookie were created first and the
+        // pending / rejected / inactive 403 was returned afterwards, so a
+        // blocked alumnus still received a working auth cookie. Everything
+        // that can refuse the login now runs first; messages are unchanged
+        // (the login page matches on them).
+        $alumni = null;
+
+        if ($user->role === 'alumni') {
+            // Self-registered alumni must prove they own the email address.
+            // Administrators and department heads (created by an admin) are
+            // exempt. Checked after the password so this cannot be used to
+            // probe which addresses are registered.
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'email_unverified',
+                    'email' => $user->email,
+                    'message' => 'Please verify your email address before signing in. Enter the 6-digit code we emailed you, or open the link in that email.'
+                ], 403);
+            }
+
+            $alumni = Alumni::where('user_id', $user->id)->firstOrFail();
+
+            if ($alumni->status === 'pending') {
+                $this->notifyAdminsAboutPendingAlumniLogin($alumni);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your alumni account is pending approval. Please wait for administrator approval. You will be notified via email once your account has been approved!'
+                ], 403);
+            }
+
+            if ($alumni->status === 'inactive') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your alumni account is inactive. Please contact administrator to reactivate your account.'
+                ], 403);
+            }
+
+            if ($alumni->status === 'rejected') {
+                // Frontend detects the "REJECTED::" prefix and pops up the
+                // Account Rejected modal with the admin notes.
+                $adminNotes = $alumni->admin_notes ?: 'No additional notes were provided by the administrator.';
+                return response()->json([
+                    'success' => false,
+                    'message' => 'REJECTED::' . $adminNotes,
+                ], 403);
+            }
         }
 
         $loginData = array(
@@ -102,35 +168,6 @@ class AuthController extends Controller
         }
 
         if ($user->role === 'alumni') {
-            $alumni = Alumni::where('user_id', $user->id)->firstOrFail();
-
-            if ($alumni->status === 'pending') {
-                $this->notifyAdminsAboutPendingAlumniLogin($alumni);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your alumni account is pending approval. Please wait for administrator approval. You will be notified via email once your account has been approved!'
-                ], 403);
-            }
-
-            if ($alumni->status === 'inactive') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your alumni account is inactive. Please contact administrator to reactivate your account.'
-                ], 403);
-            }
-
-            if ($alumni->status === 'rejected') {
-                // Frontend (FormLogin.js) detects the "REJECTED::" prefix and
-                // pops up the Account Rejected modal, displaying the admin notes
-                // and instructing the alumni to contact the Administrator Office.
-                $adminNotes = $alumni->admin_notes ?: 'No additional notes were provided by the administrator.';
-                return response()->json([
-                    'success' => false,
-                    'message' => 'REJECTED::' . $adminNotes,
-                ], 403);
-            }
-
             $responseData['alumni_id'] = $alumni->id;
 
             $this->logAudit($request, $user, 'login', $alumni);
@@ -258,6 +295,20 @@ class AuthController extends Controller
             'user_agent' => $request->userAgent(),
             'occurred_at' => now(),
         ]);
+    }
+
+    /**
+     * Record a failed login without storing the password or the raw email.
+     */
+    private function logFailedLogin(Request $request, ?string $email, string $reason): void
+    {
+        Log::channel(config('logging.security_channel', config('logging.default')))
+            ->warning('login_failed', [
+                'reason' => $reason,
+                'email_hash' => sha1(strtolower((string) $email)),
+                'ip' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 200),
+            ]);
     }
 
     private function notifyAdminsAboutPendingAlumniLogin($alumni)

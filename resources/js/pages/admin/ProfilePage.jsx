@@ -4,7 +4,8 @@ import {
     AlumniDetails,
 } from "~/components";
 import { useEffect } from "react";
-import { Row, Col, Card, Descriptions, Modal, Spin } from "antd";
+import { Row, Col, Card, Descriptions, Spin } from "antd";
+import Modal from "~/components/shared/AppModal";
 import {
     MailOutlined,
     ApartmentOutlined,
@@ -49,6 +50,27 @@ function ProfilePage() {
         confirmEnterEditMode,
     } = ctx;
 
+    // Hooks must run on every render, so this lives ABOVE the loading early-return
+    // (it used to sit below it, which changes the hook count between renders).
+    useEffect(() => {
+        if (!careerLockedVisible || !careerLockInfo.unlockAt) return;
+        const tick = () => {
+            const remaining = computeRemaining(careerLockInfo.unlockAt);
+            setCareerLockInfo((prev) => ({ ...prev, remaining }));
+            if (
+                remaining.days === 0 &&
+                remaining.hours === 0 &&
+                remaining.minutes === 0 &&
+                remaining.seconds === 0
+            ) {
+                setCareerLockedVisible(false);
+            }
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, [careerLockedVisible, careerLockInfo.unlockAt]);
+
     if (loading) {
         return (
             <Layout>
@@ -70,25 +92,6 @@ function ProfilePage() {
             </Layout>
         );
     }
-
-    useEffect(() => {
-        if (!careerLockedVisible || !careerLockInfo.unlockAt) return;
-        const tick = () => {
-            const remaining = computeRemaining(careerLockInfo.unlockAt);
-            setCareerLockInfo((prev) => ({ ...prev, remaining }));
-            if (
-                remaining.days === 0 &&
-                remaining.hours === 0 &&
-                remaining.minutes === 0 &&
-                remaining.seconds === 0
-            ) {
-                setCareerLockedVisible(false);
-            }
-        };
-        tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
-    }, [careerLockedVisible, careerLockInfo.unlockAt]);
 
     // Profile completeness
     const completeness = (() => {

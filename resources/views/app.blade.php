@@ -4,19 +4,22 @@
     $atmsTheme = in_array($atmsTheme, ['black', 'white']) ? $atmsTheme : 'white';
     $atmsHasThemeCookie = in_array(request()->cookie('atms-theme'), ['black', 'white'], true);
     $atmsThemeColor = $atmsTheme === 'black' ? '#0a0c12' : '#ffffff';
+    // PWA title bar / browser toolbar / status bar color (same as SCLF):
+    // navy on light themes, white on dark themes.
+    $atmsBarColor = $atmsTheme === 'black' ? '#ffffff' : '#01215f';
     $atmsBootBg = $atmsTheme === 'black' ? '#0a0c12' : '#f4f7fb';
     $atmsStatusBarStyle = $atmsTheme === 'black' ? 'black' : 'default';
     // cache-buster so browsers re-fetch the tab icon when site-logo.png changes
     $faviconV = @filemtime(public_path('images/site-logo.png')) ?: 1;
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $atmsTheme === 'black' ? 'black' : '' }}"@unless($atmsHasThemeCookie) data-theme-source="system"@endunless style="background:{{ $atmsBootBg }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $atmsTheme === 'black' ? 'black' : '' }}"{!! $atmsHasThemeCookie ? '' : ' data-theme-source="system"' !!} style="background:{{ $atmsBootBg }}">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <!-- Google Site Verification -->
     <meta name="google-site-verification" content="EoE6LVDV2xrA2R1kWgPDzyDYU4Dl98Sz5dktxhT68I0">
 
@@ -49,13 +52,17 @@
 
     <link rel="icon" href="{{ asset('favicon.ico') }}?v={{ $faviconV }}" sizes="any">
 
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ $logo }}?v={{ $faviconV }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}?v={{ $faviconV }}">
 
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ $logo }}?v={{ $faviconV }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon-16.png') }}?v={{ $faviconV }}">
+
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/icon-192.png') }}?v={{ $faviconV }}">
 
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v={{ $faviconV }}">
 
-    <link rel="apple-touch-icon" href="{{ $logo }}?v={{ $faviconV }}">
+    {{-- iOS home-screen icon: the white 180x180 tile with the padded shield (same as SCLF).
+         A transparent logo here is what made the icon look cropped / on black. --}}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/apple-touch-icon.png') }}?v={{ $faviconV }}">
 
     <!-- Open Graph -->
 
@@ -93,7 +100,8 @@
 
     <!-- Mobile / Pwa -->
 
-    <meta name="theme-color" content="{{ $atmsThemeColor }}">
+    <meta name="theme-color" content="{{ $atmsBarColor }}">
+
 
     <meta name="apple-mobile-web-app-capable" content="yes">
 
@@ -103,42 +111,50 @@
 
     <meta name="mobile-web-app-capable" content="yes">
 
-    <link rel="manifest" href="{{ route('pwa.manifest') }}">
+    <meta name="msapplication-TileColor" content="#01215f">
+
+    <meta name="msapplication-TileImage" content="{{ asset('images/icon-192.png') }}">
+
+    <meta name="format-detection" content="telephone=no">
+
+    {{-- use-credentials: the manifest varies with the "atms-theme" cookie, and browsers
+         fetch manifests WITHOUT cookies unless this is set. --}}
+    <link rel="manifest" href="{{ route('pwa.manifest') }}" crossorigin="use-credentials">
 
     <!-- Structured Data -->
 
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@graph": [
+        "@@context": "https://schema.org",
+        "@@graph": [
             {
-                "@type": "CollegeOrUniversity",
+                "@@type": "Organization",
                 "name": "{{ $siteName }}",
                 "url": "{{ url('/') }}",
                 "logo": "{{ $logo }}",
                 "image": "{{ $logo }}",
                 "description": "{{ $seoDescription }}",
                 "department": {
-                    "@type": "Organization",
+                    "@@type": "Organization",
                     "name": "Alumni Tracing Management System ({{ $appName }})"
                 }
             },
             {
-                "@type": "Organization",
+                "@@type": "Organization",
                 "name": "{{ $siteName }}",
                 "url": "{{ url('/') }}",
                 "logo": {
-                    "@type": "ImageObject",
+                    "@@type": "ImageObject",
                     "url": "{{ $logo }}"
                 }
             },
             {
-                "@type": "WebSite",
+                "@@type": "WebSite",
                 "name": "{{ $siteName }}",
                 "alternateName": "{{ $appName }}",
                 "url": "{{ url('/') }}",
                 "publisher": {
-                    "@type": "CollegeOrUniversity",
+                    "@@type": "Organization",
                     "name": "{{ $siteName }}"
                 },
                 "inLanguage": "en-PH"
@@ -155,9 +171,7 @@
     <!-- Pre-JS paint: matches the saved theme so there is no white flash -->
     <style>
         html,body{margin:0;background:{{ $atmsBootBg }}}
-        @if (! $atmsHasThemeCookie)
-        @media (prefers-color-scheme:dark){html[data-theme-source="system"],html[data-theme-source="system"] body{background:#0a0c12}}
-        @endif
+        {!! $atmsHasThemeCookie ? '' : '@' . 'media (prefers-color-scheme:dark){html[data-theme-source="system"],html[data-theme-source="system"] body{background:#0a0c12}}' !!}
     </style>
 
     <!-- Fonts -->
@@ -172,6 +186,7 @@
 
     <!-- React (Vite) -->
 
+    @viteReactRefresh
     @vite('resources/js/app.js')
 
 </body>

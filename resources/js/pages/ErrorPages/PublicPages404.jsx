@@ -1,6 +1,8 @@
 "use client"
 import React, { useEffect, useState, useCallback } from "react";
-import { Typography, Modal } from "antd";
+import { INSPECT_PROTECTION_ENABLED } from "~/config/inspect";
+import { Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
 import {
     HomeOutlined,
     SunOutlined,
@@ -62,6 +64,8 @@ const PublicPages404 = () => {
     // ============ Prevent right-click, DevTools, and browser zoom
     // (site-wide pattern, same as FormLogin — desktop only) ============
     useEffect(() => {
+        if (!INSPECT_PROTECTION_ENABLED) return undefined;
+
         const disableContextMenu = (e) => {
             if (window.innerWidth >= 992) {
                 e.preventDefault();
@@ -76,6 +80,8 @@ const PublicPages404 = () => {
     }, []);
 
     useEffect(() => {
+        if (!INSPECT_PROTECTION_ENABLED) return undefined;
+
         if (window.innerWidth < 992) return;
 
         const showZoomModal = () => {
@@ -284,4 +290,4 @@ const PublicPages404 = () => {
     );
 };
 
-export default React.memo(PublicPages404);
+export default React.memo(PublicPages404);

@@ -268,7 +268,7 @@ class MessagingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch alumni',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -342,7 +342,7 @@ class MessagingController extends Controller
         return response()->json([
             'success' => false,
             'message' => 'Failed to fetch conversations',
-            'error' => $e->getMessage(),
+            'error' => $this->safeError($e),
         ], 500);
     }
 }
@@ -396,7 +396,7 @@ class MessagingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch messages',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -612,7 +612,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch messages',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -707,7 +707,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send message',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -753,7 +753,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to mark messages as read',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -798,7 +798,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get unread count',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -831,7 +831,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to mark messages as read',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -857,7 +857,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update restriction',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -882,11 +882,29 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete conversation',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
 
+
+    /**
+     * Admins, or the alumnus who owns the conversation the message belongs to.
+     * Same participant rule as downloadImage().
+     */
+    private function canAccessMessage($user, Message $message): bool
+    {
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        $message->loadMissing('alumni');
+
+        return (bool) ($message->alumni && (
+            ((int) $message->alumni->user_id === (int) $user->id) ||
+            (strcasecmp((string) $message->alumni->email, (string) $user->email) === 0)
+        ));
+    }
 
     /**
      * Add or toggle reaction on a message
@@ -904,6 +922,10 @@ public function sendAdminMessage(Request $request)
             }
 
             $message = Message::findOrFail($messageId);
+
+            if (!$this->canAccessMessage($user, $message)) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
             
             // Determine user type based on the authenticated user
             // Check if user is an alumni
@@ -962,7 +984,7 @@ public function sendAdminMessage(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add reaction',
-                'error' => $e->getMessage(),
+                'error' => $this->safeError($e),
             ], 500);
         }
     }
@@ -974,6 +996,17 @@ public function sendAdminMessage(Request $request)
     public function getMessageReactions($messageId)
     {
         try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $message = Message::findOrFail($messageId);
+
+            if (!$this->canAccessMessage($user, $message)) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+
             // Return as array of emoji strings for frontend
             $reactions = DB::table('message_reactions')
                 ->where('message_id', $messageId)
@@ -1050,7 +1083,7 @@ public function deleteMessage($messageId)
         return response()->json([
             'success' => false,
             'message' => 'Failed to delete message',
-            'error' => $e->getMessage(),
+            'error' => $this->safeError($e),
         ], 500);
     }
 }
@@ -1114,9 +1147,9 @@ public function editMessage(Request $request, $messageId)
         return response()->json([
             'success' => false,
             'message' => 'Failed to edit message',
-            'error' => $e->getMessage(),
+            'error' => $this->safeError($e),
         ], 500);
     }
 }
 
-}
+}

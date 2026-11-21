@@ -3,29 +3,28 @@
 import { useState, useMemo, useEffect } from "react"
 import { useQueryClient } from "react-query"
 import {
-  Card,
-  Row,
-  Col,
-  Button,
-  Input,
-  Select,
-  Tag,
-  Avatar,
-  Typography,
-  Space,
-  Divider,
-  List,
-  Tabs,
-  Badge,
-  Modal,
-  Form,
-  Tooltip,
-  Statistic,
-  message,
-  Table,
-  Checkbox,
-} from "antd"
-import {
+    Card,
+    Row,
+    Col,
+    Input,
+    Select,
+    Tag,
+    Avatar,
+    Typography,
+    Space,
+    Divider,
+    List,
+    Tabs,
+    Badge,
+    Form,
+    Tooltip,
+    Statistic,
+    message,
+    Table,
+    Checkbox,
+} from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";import {
   SearchOutlined,
   EyeOutlined,
   EditOutlined,
@@ -603,7 +602,7 @@ useEffect(() => {
                         hoverable
                         onClick={() => handleOpenCourseFolder(course)}
                         style={{
-                          borderLeft: `4px solid ${course.color}`,
+                          border: `1.5px solid ${course.color}`,
                           cursor: "pointer",
                         }}
                       >
@@ -882,7 +881,7 @@ useEffect(() => {
               <Card
                 style={{
                   marginBottom: 16,
-                  borderLeft: "4px solid #1890ff",
+                  border: "1.5px solid #1890ff",
                   background: "#f0f9ff",
                 }}
                 bodyStyle={{ padding: "10px 16px" }}

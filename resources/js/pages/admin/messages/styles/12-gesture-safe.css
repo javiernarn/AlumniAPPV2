@@ -1,0 +1,42 @@
+/* ==========================================================================
+   12 - GESTURE-SAFE MESSAGES
+   Long-press / double-tap / right-click on a bubble opens the reaction menu
+   (see hooks/useBubbleGestures.js). The browser must therefore NOT also
+   select the text, show its copy callout, or zoom on double-tap - on phones,
+   the PWA, and desktop/laptop alike. Copying is done from the menu's "Copy".
+   ========================================================================== */
+
+.message-bubble,
+.alumni-message,
+.message-reactions,
+.reaction-badge {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;          /* iOS callout (Copy / Look Up / Share) */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;            /* scroll still works, no double-tap zoom */
+}
+
+.message-bubble *,
+.alumni-message * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.message-bubble img,
+.alumni-message img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* ...except while a message is being edited: typing/selecting must work */
+.message-bubble.editing,
+.message-bubble.editing *,
+.alumni-message.editing,
+.alumni-message.editing * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}

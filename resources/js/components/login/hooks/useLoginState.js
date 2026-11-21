@@ -3,6 +3,7 @@ import { Form } from "antd";
 import secureLocalStorage from "react-secure-storage";
 import { useShallow } from "zustand/react/shallow";
 import { useLoginStore } from "~/states/loginState";
+import usePreventInspect from "~/hooks/usePreventInspect";
 
 export default function useLoginState() {
     const [error, isSubmit, submitForm] = useLoginStore(
@@ -144,17 +145,28 @@ export default function useLoginState() {
 
     const [pendingModalOpen, setPendingModalOpen] = useState(false);
 
+    const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+    const [verifyEmail, setVerifyEmail] = useState("");
+
     const [rejectedModalOpen, setRejectedModalOpen] = useState(false);
 
     const [rejectedNotes, setRejectedNotes] = useState("");
 
     const [loginFormError, setLoginFormError] = useState("");
 
-    const [zoomModalOpen, setZoomModalOpen] = useState(false);
+    // Right-click / DevTools shortcuts / browser-zoom guard, switched by
+    // VITE_ENABLE_INSPECT_PROTECTION in .env. The zoom dialog only ever
+    // asks to be closed, so setZoomModalOpen(false) maps to closeZoomModal.
+    const { zoomModalOpen, closeZoomModal } = usePreventInspect();
+    const setZoomModalOpen = (open) => { if (!open) closeZoomModal(); };
 
     return {
         error,
         setPendingModalOpen,
+        verifyModalOpen,
+        setVerifyModalOpen,
+        verifyEmail,
+        setVerifyEmail,
         setRejectedNotes,
         setRejectedModalOpen,
         setLoginFormError,

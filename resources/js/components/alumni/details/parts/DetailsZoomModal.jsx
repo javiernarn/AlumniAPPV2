@@ -1,6 +1,8 @@
 import React from "react";
 import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Image, Modal, Upload } from "antd";
+import { Image, Upload } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { useAlumniDetailsContext } from "~/components/alumni/details/AlumniDetailsContext";
 
 export default function DetailsZoomModal() {

@@ -1,5 +1,4 @@
 import {
-    Modal,
     Form,
     Radio,
     Space,
@@ -8,8 +7,9 @@ import {
     Row,
     Col,
     Upload,
-    Button,
 } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import {
     PictureOutlined,
     DeleteOutlined,

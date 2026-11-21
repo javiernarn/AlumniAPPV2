@@ -42,38 +42,6 @@ export default function useImageQuizLogic1() {
         document.title = buildPageTitle("Image Quiz");
     }, []);
 
-    //  Prevent //
-    useEffect(() => {
-        const disableContextMenu = (e) => {
-            e.preventDefault();
-        };
-
-        document.addEventListener("contextmenu", disableContextMenu);
-
-        return () => {
-            document.removeEventListener("contextmenu", disableContextMenu);
-        };
-    }, []);
-
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (
-                e.key === "F12" ||
-                (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
-                (e.ctrlKey && e.key === "u")
-            ) {
-                e.preventDefault();
-                return false;
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, []);
-
     // ============ THEME SYNC (shared with FormLogin) ============
     // Uses the same useAppTheme hook as FormLogin so this page can never
     // drift out of sync with what was actually saved (cookie + secureLocalStorage
@@ -119,7 +87,7 @@ export default function useImageQuizLogic1() {
                     description: q.description,
                     required: q.required,
                     category: "Visual Assessment",
-                    options: q.choices.map((choice, choiceIndex) => ({
+                    options: (q.choices_with_urls || q.choices).map((choice, choiceIndex) => ({
                         id: `${q.id}_${choice.letter}`,
                         image: choice.image,
                         label: choice.letter,
@@ -357,8 +325,16 @@ export default function useImageQuizLogic1() {
         };
     };
 
+    // Keep the skeleton up until the quiz is actually built. Without this,
+    // there was one render where loading had finished but currentQuiz was still
+    // null (it is set in an effect), which flashed "Assessment Not Found".
+    const stillPreparingQuiz =
+        isLoadingQuizzes ||
+        (isFetchingQuizzes && questions.length === 0) ||
+        (questions.length > 0 && !currentQuiz);
+
     return {
-        isLoadingQuizzes,
+        isLoadingQuizzes: stillPreparingQuiz,
         currentQuiz,
         answers,
         isQuizCompleted,

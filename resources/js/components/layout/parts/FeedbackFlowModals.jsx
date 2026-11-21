@@ -7,14 +7,14 @@ import {
     UploadOutlined,
 } from "@ant-design/icons";
 import {
-    Button,
     Input,
-    Modal,
     Select,
     Typography,
     Upload,
     message,
 } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import logoMini from "~/assets/images/site-logo.png";
 import { useLayoutContext } from "~/components/layout/LayoutContext";
 import { FEEDBACK_AREAS } from "~/components/layout/utils/feedbackOptions";

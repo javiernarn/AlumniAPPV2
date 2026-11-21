@@ -1,4 +1,5 @@
-import { Modal, message } from "antd";
+import { message } from "antd";
+import Modal from "~/components/shared/AppModal";
 import secureLocalStorage from "react-secure-storage";
 import axios from "~/utils/axiosConfig";
 import { BASE_URL } from "~/utils/constant";
@@ -379,8 +380,20 @@ export default function useRegistrationFlow({
                 setCurrentStep(0);
                 setIsModalVisible(false);
 
-                // Show success message with application ID if available
-                if (response.data.application_id) {
+                // Email verification comes first: open the code pop-up
+                // (VerifyEmailGate). It then shows the application ID and the
+                // "waiting for admin approval" note.
+                if (response.data.email_verification_required) {
+                    window.dispatchEvent(
+                        new CustomEvent("atms:verify-email", {
+                            detail: {
+                                email: response.data.email,
+                                applicationId: response.data.application_id,
+                                sent: response.data.verification_email_sent !== false,
+                            },
+                        }),
+                    );
+                } else if (response.data.application_id) {
                     Modal.success({
                         title: "Registration Successful!",
                         content: (
@@ -393,16 +406,8 @@ export default function useRegistrationFlow({
                                     <strong>Application ID:</strong>{" "}
                                     {response.data.application_id}
                                 </p>
-                                <p className="ant-typography">
-                                    You will receive a confirmation email
-                                    shortly.
-                                </p>
                             </div>
                         ),
-                        onOk() {
-                            // Optional: Redirect to success page or dashboard
-                            // console.log("Application ID:", response.data.application_id)
-                        },
                     });
                 }
             } else {

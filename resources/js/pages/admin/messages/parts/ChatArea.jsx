@@ -1,6 +1,11 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { ROLES } from "~/config/roles";
 import { useMessagesContext } from "~/pages/admin/messages/MessagesContext";
+import useBubbleGestures from "~/pages/admin/messages/hooks/useBubbleGestures";
+import useMobileChatViewport, {
+    useIsPhoneViewport,
+} from "~/pages/admin/messages/hooks/useMobileChatViewport";
 
 export default function ChatArea() {
     const {
@@ -20,9 +25,6 @@ export default function ChatArea() {
         formatDateSeparator,
         inlineEditMessageId,
         activeSearchId,
-        handleDoubleClick,
-        handleLongPressStart,
-        handleLongPressEnd,
         renderMessageImage,
         renderInlineEditInput,
         highlightMatch,
@@ -46,9 +48,17 @@ export default function ChatArea() {
         selectedImage,
         activeTab,
     } = useMessagesContext();
+    const { getBubbleProps } = useBubbleGestures();
 
-    return (
-        <div className="chat-area">
+    // Phones: once a conversation is open, the chat is a full-screen panel
+    // pinned to the *visible* viewport (same approach as the alumni chat), so
+    // the header always shows and the keyboard never pushes the page around.
+    const isPhone = useIsPhoneViewport();
+    const pinned = isPhone && !!selectedConversation;
+    useMobileChatViewport(pinned, "admin");
+
+    const content = (
+        <div className={`chat-area${pinned ? " admin-chat-pinned" : ""}`}>
             {selectedConversation ? (
                 <>
                     <div className="chat-header">
@@ -215,32 +225,11 @@ export default function ChatArea() {
                                             className={`message-row ${isAdminMessage ? "admin-side" : "alumni-side"}`}
                                         >
                                             <div
-                                                className={`message-bubble ${isAdminMessage ? "admin-bubble" : "alumni-bubble"} ${isEditing ? "editing" : ""}`}
-                                                onDoubleClick={() =>
-                                                    !isEditing &&
-                                                    handleDoubleClick(
-                                                        groupedItem.id,
-                                                    )
-                                                }
-                                                onMouseDown={() =>
-                                                    !isEditing &&
-                                                    handleLongPressStart(
-                                                        groupedItem.id,
-                                                        groupedItem,
-                                                    )
-                                                }
-                                                onMouseUp={handleLongPressEnd}
-                                                onMouseLeave={
-                                                    handleLongPressEnd
-                                                }
-                                                onTouchStart={() =>
-                                                    !isEditing &&
-                                                    handleLongPressStart(
-                                                        groupedItem.id,
-                                                        groupedItem,
-                                                    )
-                                                }
-                                                onTouchEnd={handleLongPressEnd}
+                                                className={`message-bubble ${isAdminMessage ? "admin-bubble" : "alumni-bubble"} ${isEditing ? "editing" : ""} ${groupedItem.image_path || groupedItem.image_url ? "has-image" : ""}`}
+                                                {...getBubbleProps(
+                                                    groupedItem,
+                                                    isEditing,
+                                                )}
                                             >
                                                 {renderMessageImage(
                                                     groupedItem.image_path,
@@ -444,4 +433,18 @@ export default function ChatArea() {
             )}
         </div>
     );
+
+    // Rendered on <body> (outside the app shell) so no transformed / contained
+    // ancestor can trap the fixed panel. The wrapper keeps the existing
+    // ".messages-container ..." theme selectors working and generates no box.
+    if (pinned && typeof document !== "undefined") {
+        return createPortal(
+            <div className="messages-container admin-chat-portal-root">
+                {content}
+            </div>,
+            document.body,
+        );
+    }
+
+    return content;
 }

@@ -2,14 +2,26 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import {
-  Row, Col, Card, Input, Typography, Collapse, Tag, Button, Empty, Tooltip, Space, Badge,
-} from "antd"
-import {
+    Row,
+    Col,
+    Card,
+    Input,
+    Typography,
+    Collapse,
+    Tag,
+    Empty,
+    Tooltip,
+    Space,
+    Badge,
+} from "antd";
+import Button from "~/components/shared/AsyncButton";import {
   SearchOutlined, QuestionCircleOutlined, AppstoreOutlined, SafetyCertificateOutlined, MessageOutlined,
   BulbOutlined, RocketOutlined, MailOutlined, CheckCircleOutlined, ThunderboltOutlined,
   ArrowRightOutlined, FireOutlined, ArrowLeftOutlined, SunOutlined, MoonOutlined,
 } from "@ant-design/icons"
 import logo from "~/assets/images/OCC_LOGO.png"
+import AuthAppBar from "~/components/shared/AuthAppBar"
+import { InspectGuard } from "~/hooks/usePreventInspect";
 import { useAppTheme } from "~/hooks/useAppTheme"
 import ScrollProgressOrb from "../ScrollProgress/ScrollProgressOrb"
 import "./styles";
@@ -32,38 +44,6 @@ const FaqPublicPage = () => {
     return;
   }
 
-
-    //  Prevent //
-      useEffect(() => {
-      const disableContextMenu = (e) => {
-        e.preventDefault();
-      };
-
-      document.addEventListener("contextmenu", disableContextMenu);
-
-      return () => {
-        document.removeEventListener("contextmenu", disableContextMenu);
-      };
-    }, []);
-
-    useEffect(() => {
-      const handleKeyDown = (e) => {
-        if (
-          e.key === "F12" ||
-          (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
-          (e.ctrlKey && e.key === "u")
-        ) {
-          e.preventDefault();
-          return false;
-        }
-      };
-
-      document.addEventListener("keydown", handleKeyDown);
-
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    }, []);
 
   // ============ THEME SYNC FROM FORMLOGIN ============
   // Now backed by the shared useAppTheme hook (same cookie + secureLocalStorage
@@ -119,6 +99,8 @@ const FaqPublicPage = () => {
 
   return (
     <>
+      <AuthAppBar />
+      <InspectGuard />
       <div className="page-theme-toggle">
         <button
           type="button"
@@ -383,8 +365,7 @@ const FaqPublicPage = () => {
                   Can’t find the answer you’re looking for?
                 </Title>
                 <Paragraph className="faq-cta__text">
-                  Reach out to the Alumni Office. Our team will get back to
-                  you with the help you need — whether it’s account access,
+                  Reach out to the Guidance Counselor. The Guidance Counselor will get back to you with the help you need — whether it’s account access,
                   event details, or technical issues.
                 </Paragraph>
               </Col>
@@ -424,4 +405,4 @@ const FaqPublicPage = () => {
   )
 }
 
-export default FaqPublicPage
+export default FaqPublicPage

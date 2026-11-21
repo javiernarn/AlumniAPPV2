@@ -103,7 +103,9 @@ class AlumniRegistrationController extends Controller
                 'name' => $validated['first_name'] . ' ' . $validated['last_name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'email_verified_at' => now(), 
+                // Left NULL on purpose: the alumnus must verify the email
+                // address (code or link) before they can ever sign in.
+                'email_verified_at' => null,
             ]);
 
             
@@ -235,10 +237,17 @@ class AlumniRegistrationController extends Controller
                 Log::error('Failed to send alumni registration confirmation email: ' . $emailException->getMessage());
             }
 
+            // Email verification: send the link + 6-digit code. Never fails
+            // the registration; the alumnus can press "Resend" on the screen.
+            $verificationSent = \App\Http\Controllers\EmailVerificationController::send($user);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Alumni registration submitted successfully!',
                 'application_id' => $applicationId,
+                'email_verification_required' => true,
+                'verification_email_sent' => $verificationSent,
+                'email' => $user->email,
                 'data' => new \App\Http\Resources\Alumni\AlumniSelfResource($alumni->load(['documents', 'employmentStatus']))
             ], 201);
         } catch (\Exception $e) {
@@ -348,7 +357,10 @@ class AlumniRegistrationController extends Controller
     {
         $alumni = Alumni::findOrFail($id);
 
-        $this->authorize('view', $alumni);
+        // Photo only: any signed-in user may see an approved alumnus's photo
+        // (directory, messages, notifications). Full records and documents
+        // keep using the stricter 'view' ability.
+        $this->authorize('viewProfileImage', $alumni);
 
         if (!$alumni->profile_image || !Storage::disk('private')->exists($alumni->profile_image)) {
             return response()->json(['message' => 'Not found'], 404);
@@ -640,8 +652,18 @@ class AlumniRegistrationController extends Controller
     public function updateStatus(Request $request)
     {
         $alumni = Alumni::findOrFail($request->id);
-        
+
         $oldStatus = $alumni->status;
+
+        // An account cannot be approved before its owner proved the email
+        // address is theirs; otherwise nobody could receive the approval
+        // email or ever recover the password.
+        if ($request->status === 'approved' && $alumni->user && !$alumni->user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This alumnus has not verified their email address yet. Approval is available after they verify.',
+            ], 422);
+        }
 
         $alumni->update([
             'status' => $request->status,
@@ -757,7 +779,17 @@ class AlumniRegistrationController extends Controller
         // values instead of silently falling back to the alumni row's
         // own updated_at (registration/edit time, unrelated to login
         // activity) on the frontend.
-        $query = Alumni::with(['documents', 'employmentStatus', 'user:id,last_active_at,is_online']);
+        // `email_verified_at` MUST be in this column list: the admin resource
+        // reads $user->hasVerifiedEmail() from it. It used to be left out, so
+        // the column always came back NULL and EVERY alumnus (even ones who
+        // verified their email) showed the "Email not verified" tag.
+        // `course` is loaded so the card can show the course code.
+        $query = Alumni::with([
+            'documents',
+            'employmentStatus',
+            'course',
+            'user:id,role,email_verified_at,last_active_at,is_online',
+        ]);
 
         // Search
         if ($request->has('search')) {
@@ -800,6 +832,22 @@ class AlumniRegistrationController extends Controller
      * *approved* alumni — see AlumniDirectoryResource for exactly which
      * fields that includes.
      */
+    /**
+     * Aggregate counts for the Home stat cards. Any authenticated user may
+     * call it: it returns numbers only (no personal data), so alumni accounts
+     * can see "Total Alumni" without access to the admin-only GET /alumni.
+     */
+    public function summary()
+    {
+        $approved = Alumni::approved();
+
+        return response()->json([
+            'total'      => (clone $approved)->count(),
+            'employed'   => (clone $approved)->where('employment_status_id', 1)->count(),
+            'unemployed' => (clone $approved)->where('employment_status_id', 2)->count(),
+        ]);
+    }
+
     public function directory(Request $request)
     {
         // Same reasoning as index() above — the alumni-facing card in

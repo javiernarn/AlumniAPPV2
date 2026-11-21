@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Drawer, Layout } from "antd";
 import { Link } from "react-router-dom";
 import logoMini from "~/assets/images/site-logo.png";
 import { useLayoutContext } from "~/components/layout/LayoutContext";
 import SideMenu from "~/components/layout/parts/SideMenu";
+import LayoutFooter from "~/components/layout/parts/LayoutFooter";
 
 const { Sider } = Layout;
 
@@ -15,7 +16,17 @@ export default function SidebarNav() {
         toggleDrawer,
         drawerVisible,
         collapsed,
+        pathname,
     } = useLayoutContext();
+
+    // Whatever page the person lands on, the menu drawer must be closed.
+    useEffect(() => {
+        setDrawerVisible(false);
+    }, [pathname, setDrawerVisible]);
+    // ...and it can never stay open once the layout switches to the desktop sidebar.
+    useEffect(() => {
+        if (!isMobile) setDrawerVisible(false);
+    }, [isMobile, setDrawerVisible]);
 
     return isMobile ? (
         <Drawer
@@ -77,9 +88,11 @@ export default function SidebarNav() {
             placement="left"
             closable={false}
             onClose={toggleDrawer}
-            visible={drawerVisible}
-            width={isMobile ? "55%" : 280}
-            bodyStyle={{ padding: 0 }}
+            open={drawerVisible}
+            width="min(86vw, 320px)"
+            footer={<LayoutFooter />}
+            styles={{ body: { padding: 0 } }}
+            rootClassName="app-nav-drawer"
         >
             <SideMenu />
         </Drawer>

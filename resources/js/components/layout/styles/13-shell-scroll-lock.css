@@ -1,0 +1,88 @@
+/* ==========================================================================
+   SHELL SCROLL LOCK  (signed-in pages only)
+
+   Only #content may scroll. The outer shell is pinned to the viewport so that
+   nothing - scrollIntoView(), focus(), the iOS keyboard, rubber-banding - can
+   push the header, sidebar or footer out of view.
+
+   Uses the .app-shell-root class that MainLayout puts on the outer <Layout>.
+   (Deliberately NOT #main-layout: legacy rules in assets/scss/_global.scss are
+   keyed to that id and would restyle the header/content.)
+
+   Applies on every screen size; the phone-only html/body lock lives in
+   01-shell-base.css and is switched on by html.app-shell-active.
+   ========================================================================== */
+.app-shell-root {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+@supports (height: 100dvh) {
+  .app-shell-root {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+/* The flex column inside: header (fixed height) / content (scrolls) / footer */
+.app-shell-root > .site-layout {
+  min-height: 0;
+}
+.app-shell-root #content {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   NO SCROLLBAR, NO LAYOUT JUMP
+   The page-level scrollbar is already hidden on html/body (10-overrides-a.css),
+   but the signed-in shell scrolls inside #content (and the desktop sidebar), so
+   a classic scrollbar popped in the moment the page finished loading and
+   nudged everything sideways. Hiding it keeps scrolling (touch, wheel,
+   keyboard) intact and the layout width constant from first paint on every
+   phone, tablet and desktop browser.
+   ========================================================================== */
+.app-shell-root #content,
+#sidebar-wrapper .ant-layout-sider,
+.app-nav-drawer .ant-drawer-body,
+.preview-drawer-root .ant-drawer-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-shell-root #content::-webkit-scrollbar,
+#sidebar-wrapper .ant-layout-sider::-webkit-scrollbar,
+.app-nav-drawer .ant-drawer-body::-webkit-scrollbar,
+.preview-drawer-root .ant-drawer-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ==========================================================================
+   KEYBOARD-SAFE SHELL  (see hooks/useShellScrollLock.js)
+   The shell used to be a fixed 100dvh box. On iOS the keyboard does NOT shrink
+   dvh, so the page got panned and the header slid off / vibrated. Now the
+   height is driven by the real visible area (inline height + translate set by
+   the hook while a text field is focused), and every inner box just fills it.
+   ========================================================================== */
+.app-shell-root {
+  min-height: 0;
+}
+html.app-shell-active .app-shell-root > .site-layout {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* The bottom tab bar is useless (and steals height) while typing. */
+html.shell-kb-open .atms-bottomnav {
+  display: none !important;
+}
+/* Full-screen chat: it has its own header, so the app header steps aside while
+   the keyboard is up instead of peeking out from behind it. */
+html.alumni-chat-kb #header {
+  display: none !important;
+}

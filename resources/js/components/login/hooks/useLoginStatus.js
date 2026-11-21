@@ -1,149 +1,19 @@
 import { useEffect, useState } from "react";
+import { message } from "antd";
 import { useAppTheme } from "~/hooks/useAppTheme";
 
 export default function useLoginStatus({
     error,
     setPendingModalOpen,
+    setVerifyModalOpen,
+    setVerifyEmail,
+    loginForm,
     setRejectedNotes,
     setRejectedModalOpen,
     setLoginFormError,
 }) {
-    // ==========================================================
-    // Prevent right-click, DevTools, and browser zoom (Desktop only)
-    // ==========================================================
-
-    // Disable right-click
-    // useEffect(() => {
-    //     const disableContextMenu = (e) => {
-    //         if (window.innerWidth >= 992) {
-    //             e.preventDefault();
-    //         }
-    //     };
-
-    //     document.addEventListener("contextmenu", disableContextMenu);
-
-    //     return () => {
-    //         document.removeEventListener("contextmenu", disableContextMenu);
-    //     };
-    // }, []);
-
-    // // Disable DevTools + Detect Zoom
-    // useEffect(() => {
-    //     if (window.innerWidth < 992) return;
-
-    //     const showZoomModal = () => {
-    //         setZoomModalOpen(true);
-    //     };
-
-    //     // ---------------------------------------------------------------
-    //     // Baseline devicePixelRatio.
-    //     //
-    //     // Captured ONCE, silently, the moment the user lands on (or
-    //     // refreshes) the login page. We never compare against a hardcoded
-    //     // "100%" — some displays/OS scaling settings never report exactly
-    //     // 1.0 even at true 100% browser zoom, which was what caused the
-    //     // modal to incorrectly pop up on every page load/refresh.
-    //     //
-    //     // From here on, the modal only opens when devicePixelRatio
-    //     // CHANGES relative to this baseline — i.e. the user actually
-    //     // zoomed in/out while on this page. A plain window resize (e.g.
-    //     // dragging the window edge) does not change devicePixelRatio, so
-    //     // it will not false-trigger either.
-    //     // ---------------------------------------------------------------
-    //     let baselineDPR = window.devicePixelRatio;
-
-    //     const handleKeyDown = (e) => {
-    //         const key = e.key.toLowerCase();
-
-    //         // ===============================
-    //         // Block Developer Tools
-    //         // ===============================
-    //         if (
-    //             e.key === "F12" ||
-    //             (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(key)) ||
-    //             (e.ctrlKey && key === "u") ||
-    //             (e.ctrlKey && key === "s")
-    //         ) {
-    //             e.preventDefault();
-    //             e.stopPropagation();
-    //             return false;
-    //         }
-
-    //         // ===============================
-    //         // Ctrl + 0 (Allow Reset Zoom)
-    //         // ===============================
-    //         if (e.ctrlKey && e.key === "0") {
-    //             setTimeout(() => {
-    //                 // Resetting zoom becomes the new "normal" baseline too.
-    //                 baselineDPR = window.devicePixelRatio;
-    //                 setZoomModalOpen(false);
-    //             }, 300);
-
-    //             return;
-    //         }
-
-    //         // ===============================
-    //         // Block Zoom In / Out
-    //         // ===============================
-    //         if (
-    //             e.ctrlKey &&
-    //             (
-    //                 e.key === "+" ||
-    //                 e.key === "-" ||
-    //                 e.key === "=" ||
-    //                 e.key === "_" ||
-    //                 e.code === "NumpadAdd" ||
-    //                 e.code === "NumpadSubtract"
-    //             )
-    //         ) {
-    //             e.preventDefault();
-    //             e.stopPropagation();
-
-    //             showZoomModal();
-
-    //             return false;
-    //         }
-    //     };
-
-    //     // Block Ctrl + Mouse Wheel
-    //     const handleWheel = (e) => {
-    //         if (e.ctrlKey) {
-    //             e.preventDefault();
-    //             e.stopPropagation();
-
-    //             showZoomModal();
-
-    //             return false;
-    //         }
-    //     };
-
-    //     // Catches browser-menu zoom (Ctrl+/Ctrl- bypass via mouse, e.g.
-    //     // View > Zoom In) which doesn't fire our keydown/wheel handlers.
-    //     // Only compares against the live baseline — never fires on mount.
-    //     const checkZoom = () => {
-    //         const currentDPR = window.devicePixelRatio;
-
-    //         if (currentDPR !== baselineDPR) {
-    //             setZoomModalOpen(true);
-    //         }
-    //     };
-
-    //     // Intentionally NOT calling checkZoom() here. Doing so was what
-    //     // made the modal appear on every page load/refresh — we only want
-    //     // to react to a live zoom action taken while the user is here.
-
-    //     window.addEventListener("resize", checkZoom);
-    //     document.addEventListener("keydown", handleKeyDown);
-    //     document.addEventListener("wheel", handleWheel, {
-    //         passive: false,
-    //     });
-
-    //     return () => {
-    //         window.removeEventListener("resize", checkZoom);
-    //         document.removeEventListener("keydown", handleKeyDown);
-    //         document.removeEventListener("wheel", handleWheel);
-    //     };
-    // }, []);
+    // Right-click / DevTools / zoom guard now lives in usePreventInspect
+    // (called from useLoginState) and is switched by .env - nothing here.
 
     const PENDING_MSG_MATCH =
         /pending approval|wait for administrator|notified via email/i;
@@ -162,8 +32,28 @@ export default function useLoginStatus({
     const extractRejectedNotes = (msg) =>
         typeof msg === "string" ? msg.slice(REJECTED_PREFIX.length).trim() : "";
 
+    // Backend (AuthController@login) asks for email verification with a
+    // message containing "verify your email address".
+    const isEmailUnverified = (msg) =>
+        typeof msg === "string" && /verify your email address/i.test(msg);
+
+    // Result of clicking the link in the verification email: /login?verify=ok|invalid
+    useEffect(() => {
+        const flag = new URLSearchParams(window.location.search).get("verify");
+        if (flag === "ok") {
+            message.success("Email verified. Your registration now waits for administrator approval.", 6);
+        } else if (flag === "invalid") {
+            message.error("That verification link is invalid or has expired. Sign in to request a new email.", 6);
+        }
+    }, []);
+
     useEffect(() => {
         if (!error) return;
+        if (isEmailUnverified(error)) {
+            setVerifyEmail((loginForm && loginForm.getFieldValue("email")) || "");
+            setVerifyModalOpen(true);
+            return;
+        }
         if (isPendingApproval(error)) {
             setPendingModalOpen(true);
             return;

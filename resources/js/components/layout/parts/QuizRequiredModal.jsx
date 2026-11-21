@@ -1,12 +1,15 @@
 import React from "react";
+import { useHistory } from "react-router-dom";
 import { LogoutOutlined } from "@ant-design/icons";
-import { Button, Modal } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { useLayoutContext } from "~/components/layout/LayoutContext";
 import { logout } from "~/components/layout/utils/sessionActions";
 import { COLORS } from "~/config/theme";
 
 export default function QuizRequiredModal() {
     const { modalVisible, setModalVisible, alumniQuizzes } = useLayoutContext();
+    const history = useHistory();
 
     return (
         <Modal
@@ -62,7 +65,7 @@ export default function QuizRequiredModal() {
                             size="large"
                             style={{ width: "100%", marginBottom: 16 }}
                             onClick={() =>
-                                (window.location.href = "answer-question")
+                                history.push("/answer-question")
                             }
                         >
                             Program Experience Rating ✅
@@ -76,7 +79,7 @@ export default function QuizRequiredModal() {
                             size="large"
                             style={{ width: "100%", marginBottom: 16 }}
                             onClick={() =>
-                                (window.location.href = "image-quiz")
+                                history.push("/image-quiz")
                             }
                         >
                             Behavioral Assessment Questions ✅

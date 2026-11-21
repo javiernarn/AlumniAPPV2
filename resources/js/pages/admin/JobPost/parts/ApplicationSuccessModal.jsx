@@ -4,7 +4,9 @@ import {
     MailOutlined,
     SendOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Divider, Modal, Result, Space, Typography } from "antd";
+import { Card, Divider, Result, Space, Typography } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { COLORS } from "~/config/theme";
 import { useJobPostContext } from "~/pages/admin/JobPost/JobPostContext";
 
@@ -20,6 +22,7 @@ export default function ApplicationSuccessModal() {
 
     return (
         <Modal
+            rootClassName="job-post-overlay"
             open={applicationSuccessModalVisible}
             footer={null}
             onCancel={() => setApplicationSuccessModalVisible(false)}

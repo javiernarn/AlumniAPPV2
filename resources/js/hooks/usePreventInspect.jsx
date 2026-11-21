@@ -30,14 +30,13 @@
 // -----------------------------------------------------------------
 // HOW TO TURN IT OFF WHILE YOU DEBUG
 // -----------------------------------------------------------------
-// Flip the single flag below (or set the env var) instead of
-// commenting the block out in every page file:
+// Set this in your .env (no code edits, nothing to comment out):
 //
-//   INSPECT_PROTECTION_ENABLED = false
+//   VITE_ENABLE_INSPECT_PROTECTION=false   # debugging: ALL guards OFF
+//   VITE_ENABLE_INSPECT_PROTECTION=true    # production: ALL guards ON
 //
-// or, without touching code, add to your .env:
-//
-//   VITE_ENABLE_INSPECT_PROTECTION=false
+// Then restart `npm run dev` / re-run `npm run build`. The DevTools-open
+// cover is in utils/devtoolsGuard.js and uses the same switch.
 //
 // Every page that imports from this file picks up the change
 // automatically — right-click, F12/DevTools shortcuts, and the
@@ -45,16 +44,14 @@
 // edits and nothing left commented out in the page components.
 // ============================================================
 import { useEffect, useState, useCallback } from "react";
-import { Modal } from "antd";
+import Modal from "~/components/shared/AppModal";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { COLORS } from "~/config/theme";
 
-export const INSPECT_PROTECTION_ENABLED =
-    import.meta.env.VITE_ENABLE_INSPECT_PROTECTION === "false"
-        ? false
-        : true;
-        
-        // export const INSPECT_PROTECTION_ENABLED = false;
+import { INSPECT_PROTECTION_ENABLED } from "~/config/inspect";
+// Re-exported so existing imports keep working. The flag itself lives in
+// config/inspect.js (VITE_ENABLE_INSPECT_PROTECTION in .env).
+export { INSPECT_PROTECTION_ENABLED };
 
 // Desktop-only breakpoint, matches the original per-page checks
 // (window.innerWidth >= 992).
@@ -94,6 +91,8 @@ export default function usePreventInspect() {
         if (!INSPECT_PROTECTION_ENABLED) return undefined;
 
         const disableContextMenu = (e) => {
+            // Never block the "Save photo" dialog (iPad long-press etc.).
+            if (e.target?.closest?.(".save-image-sheet, [data-allow-save]")) return;
             if (window.innerWidth >= DESKTOP_MIN_WIDTH) {
                 e.preventDefault();
             }
@@ -250,4 +249,16 @@ export function ZoomWarningModal({ open, onClose }) {
             </p>
         </Modal>
     );
+}
+
+// ============================================================
+// InspectGuard - ONE line for any page: <InspectGuard />
+// Turns on the full guard (right-click, F12 / Ctrl+Shift+I/J/C, Ctrl+U,
+// Ctrl+S, zoom lock) and renders the zoom warning popup. Does nothing
+// when VITE_ENABLE_INSPECT_PROTECTION=false. Use it instead of pasting
+// effect blocks into pages.
+// ============================================================
+export function InspectGuard() {
+    const { zoomModalOpen, closeZoomModal } = usePreventInspect();
+    return <ZoomWarningModal open={zoomModalOpen} onClose={closeZoomModal} />;
 }

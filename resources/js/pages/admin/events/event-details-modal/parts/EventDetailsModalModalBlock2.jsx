@@ -1,4 +1,6 @@
-import { Modal, Space, Button, Alert } from "antd";
+import { Space, Alert } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { MessageOutlined } from "@ant-design/icons";
 import {
     Text,
@@ -65,7 +67,7 @@ export default function EventDetailsModalModalBlock2() {
                     </div>
                     <Alert
                         message="Instant Messaging"
-                        description="Get quick responses to your inquiries through Messages during office hours."
+                        description="Get quick responses to your inquiries through Messages during available hours."
                         type="info"
                         showIcon
                         icon={<MessageOutlined />}

@@ -75,6 +75,17 @@ class RouteServiceProvider extends ServiceProvider
         // attacker. Replaces the previous ad hoc implementation in
         // AuthController, which threw a bare \Exception on lockout —
         // that produced an uncaught 500, not a proper 429.
+        // Security hardening: stop bots from enumerating which emails / phones /
+        // student IDs are registered (the /check-* endpoints are unauthenticated).
+        RateLimiter::for('availability-check', function (Request $request) {
+            return Limit::perMinute(20)->by('avail|' . $request->ip());
+        });
+
+        // Public read endpoints (events, galleries, jobs, announcements).
+        RateLimiter::for('public-read', function (Request $request) {
+            return Limit::perMinute(90)->by('pub|' . $request->ip());
+        });
+
         RateLimiter::for('login', function (Request $request) {
             // Every attempt counts (even successful ones), so a per-hour cap of
             // 5 locked out people who simply logged in and out a few times.
@@ -82,6 +93,11 @@ class RouteServiceProvider extends ServiceProvider
             return [
                 Limit::perMinute(5)->by('login-min|' . $key),
                 Limit::perHour(30)->by('login-hr|' . $key),
+                // Per-IP caps regardless of which email is tried, so one machine
+                // cannot spray many different accounts (credential stuffing).
+                // Generous enough for a campus network behind one NAT.
+                Limit::perMinute(30)->by('login-ip-min|' . $request->ip()),
+                Limit::perHour(200)->by('login-ip-hr|' . $request->ip()),
             ];
         });
 
@@ -106,6 +122,16 @@ class RouteServiceProvider extends ServiceProvider
         // slow bulk fake-account creation.
         RateLimiter::for('registration', function (Request $request) {
             return Limit::perHour(5)->by($request->ip());
+        });
+
+        // Public email-verification endpoints (code check + resend).
+        // Keyed by IP and, separately, by the target address so one inbox
+        // cannot be hammered from many IPs.
+        RateLimiter::for('email-verification', function (Request $request) {
+            return [
+                Limit::perMinute(10)->by('ev-ip|' . $request->ip()),
+                Limit::perHour(30)->by('ev-email|' . strtolower((string) $request->input('email'))),
+            ];
         });
 
         // Authenticated password change.

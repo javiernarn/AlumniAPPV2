@@ -5,9 +5,7 @@ import {
     MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import {
-    Avatar,
     Badge,
-    Button,
     Col,
     Dropdown,
     Layout,
@@ -15,6 +13,8 @@ import {
     Space,
     Typography,
 } from "antd";
+import Button from "~/components/shared/AsyncButton";
+import HeaderAvatar from "~/components/layout/parts/HeaderAvatar";
 import { useLayoutContext } from "~/components/layout/LayoutContext";
 import AccountDropdown from "~/components/layout/parts/AccountDropdown";
 import NotificationsDropdown from "~/components/layout/parts/NotificationsDropdown";
@@ -103,6 +103,7 @@ export default function LayoutHeader() {
                         }}
                     >
                         <span
+                            className="hdr-title-navy"
                             style={{
                                 color: COLORS.c003366,
                                 fontWeight: 900,
@@ -119,6 +120,7 @@ export default function LayoutHeader() {
                             ALUMNI
                         </span>{" "}
                         <span
+                            className="hdr-title-red"
                             style={{
                                 color: COLORS.cc0000,
                                 fontWeight: 900,
@@ -127,6 +129,7 @@ export default function LayoutHeader() {
                             ASSOCIATION
                         </span>{" "}
                         <span
+                            className="hdr-title-navy"
                             style={{
                                 color: COLORS.c003366,
                                 fontWeight: 900,
@@ -150,9 +153,9 @@ export default function LayoutHeader() {
                                 placement="bottomRight"
                                 trigger={["click"]}
                                 dropdownRender={() => <NotificationsDropdown />}
-                                overlayStyle={{ padding: 0 }}
-                                visible={dropdownVisible}
-                                onVisibleChange={setDropdownVisible}
+                                overlayClassName="hdr-popup hdr-popup--notifications"
+                                open={dropdownVisible}
+                                onOpenChange={setDropdownVisible}
                                 // Anchoring the popup to the header
                                 // (instead of the default document.body)
                                 // keeps its positioning tied to a
@@ -204,6 +207,7 @@ export default function LayoutHeader() {
                             placement="bottomRight"
                             trigger={["click"]}
                             dropdownRender={() => <AccountDropdown />}
+                            overlayClassName="hdr-popup hdr-popup--account"
                             open={accountDropdownVisible}
                             onOpenChange={setAccountDropdownVisible}
                             getPopupContainer={() =>
@@ -224,7 +228,7 @@ export default function LayoutHeader() {
                                     background: "#667eea40",
                                 }}
                             >
-                                <Avatar
+                                <HeaderAvatar
                                     size={24}
                                     src={userData.avatar}
                                     style={{

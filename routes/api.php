@@ -15,6 +15,7 @@ use App\Http\Controllers\MessagingController;
 use App\Http\Controllers\JobPostController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\ChangePasswordController;
 use App\Http\Controllers\AnnouncementController;
@@ -35,10 +36,19 @@ Route::prefix('password')->middleware('throttle:password-reset')->group(function
     Route::post('/verify-token', [PasswordResetController::class, 'verifyToken']);
 });
 
+// Email verification for newly registered alumni. Public on purpose: an
+// alumnus cannot sign in until an administrator approves the account, so the
+// address itself (plus the emailed code) is the proof. Throttled and
+// enumeration-safe — see EmailVerificationController.
+Route::prefix('email')->middleware('throttle:email-verification')->group(function () {
+    Route::post('/verify-code', [EmailVerificationController::class, 'verifyCode']);
+    Route::post('/resend', [EmailVerificationController::class, 'resend']);
+});
+
 //public route
-Route::get('/check-email', [AlumniRegistrationController::class, 'checkEmail']);
-Route::get('/check-phone', [AlumniRegistrationController::class, 'checkPhone']);
-Route::get('/check-student-id', [AlumniRegistrationController::class, 'checkStudentId']);
+Route::get('/check-email', [AlumniRegistrationController::class, 'checkEmail'])->middleware('throttle:availability-check');
+Route::get('/check-phone', [AlumniRegistrationController::class, 'checkPhone'])->middleware('throttle:availability-check');
+Route::get('/check-student-id', [AlumniRegistrationController::class, 'checkStudentId'])->middleware('throttle:availability-check');
 
 // ============================================================
 // PUBLIC (UNAUTHENTICATED) READ-ONLY ROUTES
@@ -61,7 +71,7 @@ Route::get('/check-student-id', [AlumniRegistrationController::class, 'checkStud
 // see pending/rejected postings no matter what query string they send,
 // and (unlike the authenticated index() method) it has no Auth::user()
 // check, so anonymous visitors don't get bounced with a 401.
-Route::prefix('public')->group(function () {
+Route::prefix('public')->middleware('throttle:public-read')->group(function () {
     Route::get('/events', [EventController::class, 'publicIndex']);
     Route::get('/galleries', [GalleryController::class, 'publicIndex']);
 
@@ -81,7 +91,7 @@ Route::post('/contact', [PublicContactController::class, 'send'])
     ->middleware('throttle:public-contact');
 
 Route::group([
-    'middleware' => 'auth:api'
+    'middleware' => ['auth:api', 'email.verified']
 ], function () {
 
 // Gallery routes
@@ -114,14 +124,16 @@ Route::delete('/galleries/{id}/image', [GalleryController::class, 'deleteImage']
     // Event Registration
     Route::post('/events/{event}/register', [EventController::class, 'register']);
     Route::post('/events/{event}/cancel-registration', [EventController::class, 'cancelRegistration']);
-    Route::get('/events/{event}/registrations', [EventController::class, 'registrations']);
+    // Registrant list contains names/emails/phones — admin only.
+    Route::get('/events/{event}/registrations', [EventController::class, 'registrations'])
+        ->middleware('role:admin');
 
     Route::get('/events/data', [EventController::class, 'getEventData']);
-    Route::post('/events', [EventController::class, 'store']);
+    Route::post('/events', [EventController::class, 'store'])->middleware('role:admin');
     Route::get('/events', [EventController::class, 'index']);
     Route::get('/events/{event}', [EventController::class, 'show']);
-    Route::put('/events/{event}', [EventController::class, 'update']);
-    Route::delete('/events/{event}', [EventController::class, 'destroy']);
+    Route::put('/events/{event}', [EventController::class, 'update'])->middleware('role:admin');
+    Route::delete('/events/{event}', [EventController::class, 'destroy'])->middleware('role:admin');
 
     // Announcements (admin: full manage, alumni: read-only via role check in controller)
     Route::post('/announcements', [AnnouncementController::class, 'store']);
@@ -130,22 +142,29 @@ Route::delete('/galleries/{id}/image', [GalleryController::class, 'deleteImage']
     Route::put('/announcements/{announcement}', [AnnouncementController::class, 'update']);
     Route::delete('/announcements/{announcement}', [AnnouncementController::class, 'destroy']);
     
-    Route::get('/questions', [QuestionController::class, 'index']);
-    Route::post('/questions', [QuestionController::class, 'store']);
-    Route::get('/questions/{question}', [QuestionController::class, 'show']);
-    Route::put('/questions/{question}', [QuestionController::class, 'update']);
-    Route::delete('/questions/{question}', [QuestionController::class, 'destroy']);
+    // Question bank + quiz management is an administrator surface. The
+    // alumni-facing endpoints (/answer-quizzes, /save-alumni-quiz and the
+    // self-scoped /quizzes-result) stay open to any authenticated user.
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/questions', [QuestionController::class, 'index']);
+        Route::post('/questions', [QuestionController::class, 'store']);
+        Route::get('/questions/{question}', [QuestionController::class, 'show']);
+        Route::put('/questions/{question}', [QuestionController::class, 'update']);
+        Route::delete('/questions/{question}', [QuestionController::class, 'destroy']);
 
-    // Quizzes Routes
-    Route::get('/quizzes', [QuizController::class, 'index']);
-    Route::post('/quizzes', [QuizController::class, 'store']);
-    Route::get('/quizzes/{quiz}', [QuizController::class, 'show']);
-    Route::put('/quizzes/{quiz}', [QuizController::class, 'update']);
-    Route::delete('/quizzes/{quiz}', [QuizController::class, 'destroy']);
-    Route::post('/quizzes/{quiz}/duplicate', [QuizController::class, 'duplicate']);
-    Route::put('/quizzes/{quiz}/order', [QuizController::class, 'updateOrder']);
-    Route::post('quiz-active', [QuizController::class, 'quizActive']);
+        // Quizzes Routes
+        Route::get('/quizzes', [QuizController::class, 'index']);
+        Route::post('/quizzes', [QuizController::class, 'store']);
+        Route::get('/quizzes/{quiz}', [QuizController::class, 'show']);
+        Route::put('/quizzes/{quiz}', [QuizController::class, 'update']);
+        Route::delete('/quizzes/{quiz}', [QuizController::class, 'destroy']);
+        Route::post('/quizzes/{quiz}/duplicate', [QuizController::class, 'duplicate']);
+        Route::put('/quizzes/{quiz}/order', [QuizController::class, 'updateOrder']);
+        Route::post('quiz-active', [QuizController::class, 'quizActive']);
+    });
     Route::get('/answer-quizzes', [QuizController::class, 'answerQuiz']);
+    // Admins get every submission; everyone else only their own (scoped in
+    // QuizController::quizzesResult — the alumni Home page relies on this).
     Route::get('/quizzes-result', [QuizController::class, 'quizzesResult']);
 
     Route::post('save-alumni-quiz', [QuizController::class, 'saveAlumniQuiz'])
@@ -172,6 +191,10 @@ Route::delete('/galleries/{id}/image', [GalleryController::class, 'deleteImage']
         // swallowed by that route's numeric-only constraint... it won't
         // (that route requires digits), but keeping it here for clarity.
         Route::get('/directory', [AlumniRegistrationController::class, 'directory']);
+
+        // Counts only (total / employed / unemployed) for the Home stat cards;
+        // open to every authenticated role since it exposes no personal data.
+        Route::get('/summary', [AlumniRegistrationController::class, 'summary']);
 
         // Ownership/role checks for a single record are enforced inside
         // the controller via AlumniPolicy (admin, the record owner, or a
@@ -396,3 +419,29 @@ Route::post('/alumni/register', [AlumniRegistrationController::class, 'store'])
     ->middleware('throttle:registration');
 Route::get('/get-courses', [GlobalAluminiController::class, 'courses']);
 Route::get('/get-employee-status', [GlobalAluminiController::class, 'employeeStatus']);
+
+// Public OCC Services status: checks each OCC system from the server (no browser
+// CORS/CSP limits), cached briefly so the public page can't be used to hammer them.
+Route::get('/occ-services/status', function () {
+    $systems = [
+        'official' => 'https://www.occ.edu.ph',
+        'sis' => 'https://www.sis.occph.com',
+        'admission' => 'https://www.admission.occph.com',
+        'csdl' => 'https://www.csdl.occph.com',
+        'alumni' => 'https://www.alumni.occph.com',
+        'occdl' => 'https://antiquina-ota.ethiodeploy.app',
+        'sclf' => 'https://sclfapp.ethiodeploy.app',
+    ];
+    return response()->json(\Illuminate\Support\Facades\Cache::remember('occ_services_status', 60, function () use ($systems) {
+        $out = [];
+        foreach ($systems as $id => $url) {
+            try {
+                \Illuminate\Support\Facades\Http::timeout(6)->withoutVerifying()->get($url);
+                $out[$id] = 'up'; // any HTTP response means the server answered
+            } catch (\Throwable $e) {
+                $out[$id] = 'down';
+            }
+        }
+        return $out;
+    }));
+})->middleware('throttle:30,1');

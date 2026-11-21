@@ -12,13 +12,11 @@ import {
 } from "@ant-design/icons";
 import {
     Alert,
-    Button,
     Col,
     Divider,
     Form,
     Input,
     InputNumber,
-    Modal,
     Row,
     Select,
     Space,
@@ -27,6 +25,8 @@ import {
     Upload,
     message,
 } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import moment from "moment";
 import { COLORS } from "~/config/theme";
 import { useJobPostContext } from "~/pages/admin/JobPost/JobPostContext";
@@ -60,6 +60,7 @@ export default function CreateEditJobModal() {
 
     return (
         <Modal
+            rootClassName="job-post-overlay"
             title={
                 <Space size="middle" wrap>
                     <span>

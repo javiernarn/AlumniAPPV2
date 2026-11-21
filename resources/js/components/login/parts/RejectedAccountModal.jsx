@@ -1,6 +1,6 @@
 import React from "react";
 import { CloseCircleFilled } from "@ant-design/icons";
-import { Modal } from "antd";
+import Modal from "~/components/shared/AppModal";
 import { useLoginContext } from "~/components/login/LoginContext";
 import { COLORS } from "~/config/theme";
 
@@ -72,7 +72,7 @@ export default function RejectedAccountModal() {
 
             <p style={{ marginTop: 14, marginBottom: 0, lineHeight: 1.6 }}>
                 For further clarification or questions regarding this decision,
-                please contact the <strong>Administrator Office</strong>
+                please contact the <strong>Guidance Counselor (Administrator)</strong>
             </p>
         </Modal>
     );

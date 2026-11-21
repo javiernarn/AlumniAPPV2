@@ -14,7 +14,7 @@ class GalleryController extends Controller
     // Get all galleries (for all roles)
     public function index(Request $request)
     {
-        $query = Gallery::with('uploader:id,name,email')
+        $query = Gallery::with('uploader:id,name')
             ->where('status', 'active')
             ->orderBy('created_at', 'desc');
 
@@ -141,7 +141,7 @@ class GalleryController extends Controller
     // Get single gallery
     public function show($id)
     {
-        $gallery = Gallery::with('uploader:id,name,email')->find($id);
+        $gallery = Gallery::with('uploader:id,name')->find($id);
 
         if (!$gallery) {
             return response()->json([
@@ -200,7 +200,7 @@ class GalleryController extends Controller
 
         foreach ($request->file('images') as $index => $file) {
             $originalName = $file->getClientOriginalName();
-            $fileType = strtolower($file->getClientOriginalExtension());
+            $fileType = strtolower($file->extension());
             $fileSize = $file->getSize();
             $fileName = time() . '_' . uniqid() . '_' . $index . '.' . $fileType;
             $filePath = $file->storeAs('galleries', $fileName, 'public');
@@ -232,7 +232,7 @@ class GalleryController extends Controller
         return response()->json([
             'success' => true,
             'message' => count($uploadedPaths) . ' image(s) uploaded successfully',
-            'data' => $gallery->load('uploader:id,name,email'),
+            'data' => $gallery->load('uploader:id,name'),
         ], 201);
     }
 
@@ -298,7 +298,7 @@ class GalleryController extends Controller
             // Upload new images
             $newPaths = [];
             foreach ($request->file('images') as $index => $file) {
-                $fileName = time() . '_' . uniqid() . '_' . $index . '.' . strtolower($file->getClientOriginalExtension());
+                $fileName = time() . '_' . uniqid() . '_' . $index . '.' . strtolower($file->extension());
                 $filePath = $file->storeAs('galleries', $fileName, 'public');
                 $newPaths[] = $filePath;
                 $totalSize += $file->getSize();
@@ -314,7 +314,7 @@ class GalleryController extends Controller
             if (count($newPaths) > 0) {
                 $firstNewFile = $request->file('images')[0];
                 $gallery->original_name = $firstNewFile->getClientOriginalName();
-                $gallery->file_type = strtolower($firstNewFile->getClientOriginalExtension());
+                $gallery->file_type = strtolower($firstNewFile->extension());
             }
         }
 
@@ -335,7 +335,7 @@ class GalleryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Gallery updated successfully',
-            'data' => $gallery->load('uploader:id,name,email'),
+            'data' => $gallery->load('uploader:id,name'),
         ]);
     }
 
@@ -381,39 +381,76 @@ class GalleryController extends Controller
     }
 
     // Download single image from gallery
+    //
+    // Never lets an exception escape as a bare HTTP 500: every failure is
+    // logged with the real reason (storage/logs/laravel.log) and answered
+    // with a clear JSON status the app can act on. Missing files (which is
+    // what happens when uploads are not on a persistent disk and the host
+    // is redeployed) answer 404, not 500.
     public function download($id, Request $request)
     {
-        $gallery = Gallery::find($id);
+        try {
+            $gallery = Gallery::find($id);
 
-        if (!$gallery) {
+            if (!$gallery) {
+                return response()->json(['success' => false, 'message' => 'Gallery not found'], 404);
+            }
+
+            $imageIndex = (int) $request->query('index', 0);
+            $rawPaths = is_array($gallery->image_paths) && count($gallery->image_paths)
+                ? $gallery->image_paths
+                : [$gallery->image_path];
+            $imagePaths = array_values(array_filter($rawPaths));
+
+            if ($imageIndex < 0 || $imageIndex >= count($imagePaths)) {
+                return response()->json(['success' => false, 'message' => 'Image index out of range'], 404);
+            }
+
+            // Read through the public disk (works for local folders and the
+            // database driver). Reject traversal attempts.
+            $relativePath = (string) $imagePaths[$imageIndex];
+            $disk = Storage::disk('public');
+
+            if (str_contains($relativePath, '..') || !$disk->exists($relativePath)) {
+                \Log::warning('Gallery download: file missing on disk', [
+                    'gallery_id' => $id,
+                    'index' => $imageIndex,
+                    'path' => $relativePath,
+                ]);
+                return response()->json(['success' => false, 'message' => 'File not found'], 404);
+            }
+
+            $extension = strtolower(pathinfo($relativePath, PATHINFO_EXTENSION)) ?: 'jpg';
+            $mime = [
+                'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+                'gif' => 'image/gif', 'webp' => 'image/webp', 'heic' => 'image/heic',
+                'heif' => 'image/heif', 'avif' => 'image/avif', 'bmp' => 'image/bmp',
+            ][$extension] ?? 'application/octet-stream';
+
+            // Plain ASCII filename only: titles with emoji/quotes/"%" used to
+            // produce an invalid Content-Disposition header (HTTP 500).
+            $title = (string) \Illuminate\Support\Str::ascii((string) $gallery->title);
+            $title = trim(preg_replace('/[^A-Za-z0-9._ -]+/', ' ', $title));
+            $title = trim(preg_replace('/\s+/', '_', $title), '_') ?: 'photo';
+            $asciiName = substr($title, 0, 80) . '_' . ($imageIndex + 1) . '.' . $extension;
+
+            return response($disk->get($relativePath), 200, [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'attachment; filename="' . $asciiName . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, max-age=300',
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Gallery download failed', [
+                'gallery_id' => $id,
+                'error' => $this->safeError($e),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Gallery not found',
-            ], 404);
+                'message' => 'The photo could not be prepared for download.',
+            ], 500);
         }
-
-        // Get image index (default to 0 for first image)
-        $imageIndex = $request->get('index', 0);
-        $imagePaths = $gallery->image_paths ?? [$gallery->image_path];
-
-        if ($imageIndex >= count($imagePaths)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Image index out of range',
-            ], 404);
-        }
-
-        $filePath = storage_path('app/public/' . $imagePaths[$imageIndex]);
-
-        if (!file_exists($filePath)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File not found',
-            ], 404);
-        }
-
-        $filename = $gallery->title . '_' . ($imageIndex + 1) . '.' . pathinfo($imagePaths[$imageIndex], PATHINFO_EXTENSION);
-        return response()->download($filePath, $filename);
     }
 
     // Delete single image from gallery (admin only)
@@ -473,7 +510,7 @@ class GalleryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Image deleted successfully',
-            'data' => $gallery->load('uploader:id,name,email'),
+            'data' => $gallery->load('uploader:id,name'),
         ]);
     }
 

@@ -12,12 +12,15 @@ import {
     SolutionOutlined,
     AppstoreOutlined,
     TeamOutlined,
+    SearchOutlined,
     FacebookOutlined,
     TwitterOutlined,
     InstagramOutlined,
     ReloadOutlined,
+    ClockCircleOutlined,
 } from "@ant-design/icons";
 import logo from "~/assets/images/site-logo.png";
+import PublicFooter from "~/components/shared/PublicFooter";
 import { useAppTheme } from "~/hooks/useAppTheme";
 import usePreventInspect, { ZoomWarningModal } from "~/hooks/usePreventInspect";
 // Reuses every design token (--ph-accent, .ph-btn, .ph-card, .grad, etc.)
@@ -95,6 +98,26 @@ const OCC_SYSTEMS = [
         domain: "alumni.occph.com",
         description:
             "The OCC Alumni Association platform — reconnect with batchmates, and browse events, job posts, and the gallery.",
+    },
+    {
+        id: "occdl",
+        name: "OCCDL — OCC Duty Log",
+        tag: "Student Trainee",
+        icon: <ClockCircleOutlined />,
+        url: "https://antiquina-ota.ethiodeploy.app",
+        domain: "antiquina-ota.ethiodeploy.app",
+        description:
+            "A real-time on-the-job training duty log and hours tracker for OCC trainees — log duty days per host client, watch your progress toward the required hours, and export a signable Duty Time Record.",
+    },
+    {
+        id: "sclf",
+        name: "SCLF — Smart Campus Lost & Found",
+        tag: "Students & Instructors",
+        icon: <SearchOutlined />,
+        url: "https://sclfapp.ethiodeploy.app",
+        domain: "sclfapp.ethiodeploy.app",
+        description:
+            "Lost something on campus, or found something that isn't yours? Report, search, and claim lost or found items at Opol Community College.",
     },
 ];
 
@@ -192,13 +215,29 @@ const PublicOccServicesPage = () => {
                 ...prev,
                 [system.id]: { ...prev[system.id], state: "checking" },
             }));
-            checkSystemReachable(system.url).then((state) => {
-                setStatuses((prev) => ({
-                    ...prev,
-                    [system.id]: { state, checkedAt: new Date() },
-                }));
-            });
         });
+        // Preferred: ask our own server (no CORS/CSP limits, accurate).
+        // Fallback: per-system browser check if the endpoint is unavailable.
+        fetch("/api/occ-services/status", { headers: { Accept: "application/json" } })
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error("status"))))
+            .then((data) => {
+                const checkedAt = new Date();
+                setStatuses(
+                    Object.fromEntries(
+                        OCC_SYSTEMS.map((s) => [s.id, { state: data[s.id] === "up" ? "up" : "down", checkedAt }]),
+                    ),
+                );
+            })
+            .catch(() => {
+                OCC_SYSTEMS.forEach((system) => {
+                    checkSystemReachable(system.url).then((state) => {
+                        setStatuses((prev) => ({
+                            ...prev,
+                            [system.id]: { state, checkedAt: new Date() },
+                        }));
+                    });
+                });
+            });
     }, []);
 
     useEffect(() => {
@@ -375,7 +414,8 @@ const PublicOccServicesPage = () => {
                     <Paragraph className="occsvc-intro-lead">
                         Opol Community College runs a few different online systems —
                         one for the school itself, one for entrance exams, one for
-                        enrolled students, and one for alumni. They all carry the
+                        enrolled students, one for alumni, and one for lost and found.
+                        They all carry the
                         same OCC mark because they're all part of the same campus;
                         this page is just a directory so you always land on the
                         right one.
@@ -472,62 +512,8 @@ const PublicOccServicesPage = () => {
                 </div>
             </section>
 
-            {/* ============ FOOTER ============ */}
-            <footer className="ph-footer">
-                <div className="ph-footer-inner">
-                    <div className="ph-footer-brand-col">
-                        <div className="ph-footer-brand">
-                            <img src={logo} alt="OCC Alumni Logo" />
-                            <span className="ph-footer-brand-title">OCC Alumni Association</span>
-                        </div>
-                        <Paragraph className="ph-footer-desc">
-                            Connecting Opol Community College alumni worldwide, fostering
-                            lifelong relationships with the institution, and supporting
-                            the next generation of OCCians.
-                        </Paragraph>
-                        <div className="ph-footer-social">
-                            <a href="#" aria-label="Facebook"><FacebookOutlined /></a>
-                            <a href="#" aria-label="Twitter"><TwitterOutlined /></a>
-                            <a href="#" aria-label="Instagram"><InstagramOutlined /></a>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="ph-footer-heading">Quick Links</div>
-                        <div className="ph-footer-links">
-                            <button onClick={goHome}>Home</button>
-                            {/* <button onClick={() => goTo("/public-events")}>Events</button>
-                            <button onClick={() => goTo("/public-gallery")}>Gallery</button>
-                            <button onClick={() => goTo("/public-job-posts")}>Job Posts</button>
-                            <button onClick={() => goTo("/public-announcements")}>Announcements</button>
-                            <button onClick={() => goTo("/public-about")}>About</button>
-                            <button onClick={() => goTo("/public-faq")}>FAQs</button> */}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="ph-footer-heading">ATMS</div>
-                        <div className="ph-footer-links">
-                            <button onClick={() => goTo("/public-contact")}>Contact Us</button>
-                            <button onClick={() => goTo("/public-credits")}>Credits</button>
-                            <button onClick={() => goTo("/install-pwa")}>Install PWA</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="ph-footer-bottom">
-                    <span>ATMS - All rights reserved.</span>
-                    <span className="ph-footer-credit">
-                        <code className="ph-footer-tag">{"</>"}</code>
-                        Developed by <strong className="ph-footer-dev-name"> <a href="https://www.facebook.com/EphemeralKun/" target="_blank" rel="noopener noreferrer">Antiquina, Jonee John R.</a></strong>
-                        <span className="ph-footer-dot">•</span> Secure
-                        <span className="ph-footer-dot">•</span> Alumni Association
-                        <span className="ph-footer-dot">•</span> Events
-                        <span className="ph-footer-dot">•</span> © {"2025"} ATMS
-                        <span className="ph-footer-dot">•</span> Built with <span className="ph-footer-heart">❤️</span>
-                    </span>
-                </div>
-            </footer>
+            {/* ============ FOOTER (shared with every other public page) ============ */}
+            <PublicFooter goTo={goTo} />
 
             <ZoomWarningModal open={zoomModalOpen} onClose={closeZoomModal} />
         </div>

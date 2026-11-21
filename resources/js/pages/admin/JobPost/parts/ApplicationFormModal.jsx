@@ -18,13 +18,11 @@ import {
 import {
     Alert,
     Avatar,
-    Button,
     Card,
     Col,
     Divider,
     Form,
     Input,
-    Modal,
     Row,
     Select,
     Space,
@@ -33,6 +31,8 @@ import {
     Typography,
     Upload,
 } from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";
 import { ROLES } from "~/config/roles";
 import { COLORS } from "~/config/theme";
 import { useJobPostContext } from "~/pages/admin/JobPost/JobPostContext";
@@ -65,6 +65,7 @@ export default function ApplicationFormModal() {
 
     return (
         <Modal
+            rootClassName="job-post-overlay"
             title={
                 <Space>
                     <SendOutlined />

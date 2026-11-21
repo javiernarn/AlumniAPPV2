@@ -1,20 +1,19 @@
 import { useState, useRef } from "react"
 import {
-  Card,
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Space,
-  Typography,
-  Tag,
-  Popconfirm,
-  Row,
-  Col,
-} from "antd"
-import {
+    Card,
+    Table,
+    Form,
+    Input,
+    Select,
+    Space,
+    Typography,
+    Tag,
+    Popconfirm,
+    Row,
+    Col,
+} from "antd";
+import Modal from "~/components/shared/AppModal";
+import Button from "~/components/shared/AsyncButton";import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
